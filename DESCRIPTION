@@ -1,0 +1,21 @@
+Package: crisprViz
+Title: Visualization Functions for GuideSet objects
+Version: 0.99.1
+Authors@R: 
+    person("Jean-Philippe", "Fortin", email = "fortin946@gmail.com", role = c("aut", "cre")),
+    person("Luke", "Hoberecht", email = "lukehob3@gmail.com", role = c("aut"))
+    )
+Description: Visualization functions for GuideSet objects.
+Depends: R (>= 4.2.0),
+	crisprBase (>= 0.99.15),
+	crisprDesign (>=0.99.77)
+Imports:
+	Gviz
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.0
+VignetteBuilder: knitr
+BugReports: https://github.com/Jfortin1/crisprViz/issues
+URL: https://github.com/Jfortin1/crisprViz
+LazyData: true
