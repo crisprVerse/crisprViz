@@ -1,9 +1,3 @@
-
-
-
-
-
-
 ## TODO:
 #   additional tracks if SNP, repeat elements detected in gs, or provided?
 
@@ -11,9 +5,23 @@
 
 
 
-
+# library(crisprDesign)
+# library(crisprDesignData)
+# data(guideSetExample)
+# data(txdb_human)
+# gs <- guideSetExample[1:10]
+# targetGene <- "IQSEC3"
+# geneModel <- txdb_human
+# plotGuideSets(list(gs),
+#               ideogram=Ideogram_GRCh38,
+#               geneModel=geneModel,
+#               targetGene=targetGene,
+#               from=65000,
+#               to=70000,
+#               genome="hg38")
 plotGuideSets <- function(guideSets, # list of guideSets (names optional)
                           ideogram=NULL, # genome identifier or bands
+                          genome=NULL,
                           geneModel=NULL,
                           targetGene=NULL, # either a gene symbol/id, or genomic coordinates? ...how to implement?
                           from=NULL, # see plotTracks
@@ -43,7 +51,8 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
     
     ## get tracks
     ideogramTrack <- .getIdeogramTrack(chr=chr,
-                                       ideogram=ideogram)
+                                       ideogram=ideogram,
+                                       genome=genome)
     genomeAxisTrack <- .getGenomeAxisTrack()
     guideTracks <- .getGuideTrack(guideSets)
     txTrack <- .getTxTrack(geneModel=geneModel,
@@ -87,7 +96,8 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
 
 
 .getIdeogramTrack <- function(chr,
-                              ideogram
+                              ideogram,
+                              genome
 ){
     ## check whether ideogram is genome or bands
     if (is.null(ideogram)){
@@ -98,7 +108,8 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
             chromosome=chr,
             bands=ideogram,
             fontcolor="black",
-            cex=1
+            cex=1,
+            genome=genome
         )
     } else if (is.character(ideogram) && length(ideogram) == 1){
         Gviz::IdeogramTrack(
