@@ -5,20 +5,21 @@
 
 
 
-# library(crisprDesign)
-# library(crisprDesignData)
-# data(guideSetExample)
-# data(txdb_human)
-# gs <- guideSetExample[1:10]
-# targetGene <- "IQSEC3"
-# geneModel <- txdb_human
-# plotGuideSets(list(gs),
-#               ideogram=Ideogram_GRCh38,
-#               geneModel=geneModel,
-#               targetGene=targetGene,
-#               from=65000,
-#               to=70000,
-#               genome="hg38")
+library(crisprDesign)
+library(crisprDesignData)
+library(crisprViz)
+data(guideSetExample)
+data(txdb_human)
+gs <- guideSetExample[1:10]
+targetGene <- "IQSEC3"
+geneModel <- txdb_human
+plotGuideSets(list(gs),
+              ideogram=Ideogram_GRCh38,
+              geneModel=geneModel,
+              targetGene=targetGene,
+              from=66500,
+              to=67500,
+              genome="hg38")
 plotGuideSets <- function(guideSets, # list of guideSets (names optional)
                           ideogram=NULL, # genome identifier or bands
                           genome=NULL,
@@ -137,7 +138,8 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
 
 
 
-.getGuideTrack <- function(guideSets
+.getGuideTrack <- function(guideSets,
+                           stacking="squish"
 ){
     if (is.null(names(guideSets))){
         names(guideSets) <- paste0("GuideSet_", seq_along(guideSets))
@@ -156,7 +158,7 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
             id="id",
             group=names(protospacerRanges),
             showID=TRUE,
-            stacking="squish",
+            stacking=stacking,
             collapse=FALSE,
             col="darkblue",
             shape="box",
