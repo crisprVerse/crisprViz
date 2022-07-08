@@ -1,79 +1,96 @@
-## TODO:
-#   additional tracks if SNP, repeat elements detected in gs, or provided?
+
+# library(crisprDesign)
+# library(crisprDesignData)
+# library(crisprViz)
+# data(guideSetExample)
+# data(txdb_human)
+# gs <- guideSetExample[1:10]
+# targetGene <- "IQSEC3"
+# geneModel <- txdb_human
+# plotGuideSets(list(gs),
+#               ideogram=Ideogram_GRCh38,
+#               geneModel=geneModel,
+#               targetGene=targetGene,
+#               from=66500,
+#               to=67500,
+#               genome="hg38")
+
+# kras <- queryTxObject(txdb_human, "cds", "gene_symbol", "KRAS")
+# kras <- kras[1]
+# gs <- findSpacers(kras, crisprNuclease=SpCas9, bsgenome=BSgenome.Hsapiens.UCSC.hg38)
+# ideogram <- readRDS("inst/shiny/data/ideogram_hg38.rds")
 
 
 
-
-
-library(crisprDesign)
-library(crisprDesignData)
-library(crisprViz)
-data(guideSetExample)
-data(txdb_human)
-gs <- guideSetExample[1:10]
-targetGene <- "IQSEC3"
-geneModel <- txdb_human
-plotGuideSets(list(gs),
-              ideogram=Ideogram_GRCh38,
-              geneModel=geneModel,
-              targetGene=targetGene,
-              from=66500,
-              to=67500,
-              genome="hg38")
-plotGuideSets <- function(guideSets, # list of guideSets (names optional)
-                          ideogram=NULL, # genome identifier or bands
-                          genome=NULL,
-                          geneModel=NULL,
-                          targetGene=NULL, # either a gene symbol/id, or genomic coordinates? ...how to implement?
-                          from=NULL, # see plotTracks
-                          to=NULL, # see plotTracks
-                          extend.left=0, # see plotTracks
-                          extend.right=0, # see plotTracks
-                          legendMetric=NULL, # color coding guides...need to add legend
-                          ... # options that can be passed to subfunctions?
+plotGuideSet <- function(guideSet,
+                         bands=NULL, # see ?IdeogramTrack
+                         bsgenome=NULL, # used in SequenceTrack
+                         geneModel=NULL,
+                         targetGene=NULL, # gene symbol or id
+                         from=NULL, # see plotTracks
+                         to=NULL, # see plotTracks
+                         extend.left=0, # see plotTracks
+                         extend.right=0, # see plotTracks
+                         includeSequenceTrack=FALSE,
+                         legendMetric=NULL#, # color coding guides...need to add legend
+                         # displayOptions=NULL # named list of options that can be passed to subfunctions
 ){
     ## check inputs
-    if (!is.list(guideSets)){
-        stop("not a list")
-    }
-    lapply(guideSets, function(x){
-        stopifnot("guideSets must be a list of GuideSet objects" = {
-            methods::is(x, "GuideSet")
-        })
+    stopifnot("guideSet must be a GuideSet object" = {
+        methods::is(guideSet, "GuideSet")
     })
-    chr <- lapply(guideSets, function(x){
-        as.character(unique(GenomeInfoDb::seqnames(x)))
+    chr <- .validateSingleChr(guideSet)
+    stopifnot("bsgenome must be a BSgenome object or NULL" = {
+        methods::is(bsgenome, "BSgenome") || is.null(bsgenome)
     })
-    chr <- unique(unlist(chr))
-    stopifnot("Can only plot a single chromosome" = {
-        length(chr) == 1
+    stopifnot("targetGene must be a character vector or NULL" = {
+        is.vector(targetGene, mode="character") || is.null(targetGene)
     })
+    stopifnot(S4Vectors::isTRUEorFALSE(includeSequenceTrack))
     
     
-    ## get tracks
+    
+    
+    
+    
+    
+    ## set tracks
     ideogramTrack <- .getIdeogramTrack(chr=chr,
-                                       ideogram=ideogram,
-                                       genome=genome)
+                                       genome=unique(GenomeInfoDb::genome(guideSet)),
+                                       bands=bands)
     genomeAxisTrack <- .getGenomeAxisTrack()
-    guideTracks <- .getGuideTrack(guideSets)
-    txTrack <- .getTxTrack(geneModel=geneModel,
-                           targetGene=targetGene)
+    guideTrack <- .getGuideTrack(guideSet)
     
+    ## set plot range
+    plotWindowMin <- min(guideTrack)
+    plotWindowMax <- max(guideTrack)
+    plotWindowSize <- plotWindowMax - plotWindowMin
+    if (is.null(from)){
+        from <- plotWindowMin - plotWindowSize
+    }
+    if (is.null(to)){
+        to <- plotWindowMax + plotWindowSize
+    }
+    ## have geneTrack adjust to plot window
     
+    geneTrack <- .getGeneTrack(geneModel=geneModel,
+                               targetGene=targetGene,
+                               from=from - extend.left,
+                               to=to + extend.right)
     
-    ## arrange tracks
-    ## get plotting range
-    
-    ## plot
-    tracks <- c(list(ideogramTrack, genomeAxisTrack), guideTracks, txTrack)
+    tracks <- c(list(ideogramTrack, genomeAxisTrack), geneTrack, guideTrack)
     tracks <- tracks[vapply(tracks, function(x){
         !is.null(x)
     }, FUN.VALUE=logical(1))]
+    if (includeSequenceTrack){
+        tracks <- c(tracks,
+                    .getSequenceTrack(
+                        chr=chr,
+                        bsgenome=bsgenome
+                    )
+        )
+    }
     
-    # extend.left <- .getPlotExtend(extend=extend.left,
-    #                               tracks=guideTracks) # add tx/tss tracks, if any
-    # extend.right <- .getPlotExtend(extend=extend.right,
-    #                                tracks=guideTracks) # add tx/tss tracks, if any
     
     Gviz::plotTracks(
         tracks,
@@ -91,36 +108,57 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
 
 
 
+
+
+
+## input validation ===========================================================
+
+
+
+#' @importFrom GenomeInfoDb seqnames
+.validateSingleChr <- function(guideSet
+){
+    chr <- GenomeInfoDb::seqnames(guideSet)
+    chr <- as.character(unique(chr))
+    stopifnot("Can only plot a single chromosome" = {
+        length(chr) == 1
+    })
+    return(chr)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## tracks =====================================================================
 
 
 
-
 .getIdeogramTrack <- function(chr,
-                              ideogram,
-                              genome
+                              genome,
+                              bands
 ){
-    ## check whether ideogram is genome or bands
-    if (is.null(ideogram)){
+    if (is.null(genome) && is.null(bands)){
         return(NULL)
-    } else if (is.data.frame(ideogram)){
-        ## assume is bands -- need test
+    } else {
         Gviz::IdeogramTrack(
             chromosome=chr,
-            bands=ideogram,
-            fontcolor="black",
-            cex=1,
-            genome=genome
-        )
-    } else if (is.character(ideogram) && length(ideogram) == 1){
-        Gviz::IdeogramTrack(
-            chromosome=chr,
-            genome=ideogram,
+            genome=genome,
+            bands=bands,
             fontcolor="black",
             cex=1
         )
-    } else {
-        stop("Can't recognize ideogram arg")
     }
 }
 
@@ -138,36 +176,6 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
 
 
 
-.getGuideTrack <- function(guideSets,
-                           stacking="squish"
-){
-    if (is.null(names(guideSets))){
-        names(guideSets) <- paste0("GuideSet_", seq_along(guideSets))
-    }
-    lapply(seq_along(guideSets), function(x){
-        name <- names(guideSets)[x]
-        protospacerRanges <- crisprBase::getProtospacerRanges(
-            gr=guideSets[[x]],
-            nuclease=crisprDesign::crisprNuclease(guideSets[[x]]),
-        )
-        Gviz::AnnotationTrack(
-            range=protospacerRanges,
-            chromosome=GenomeInfoDb::seqnames(protospacerRanges),
-            strand=BiocGenerics::strand(protospacerRanges),
-            name=name,
-            id="id",
-            group=names(protospacerRanges),
-            showID=TRUE,
-            stacking=stacking,
-            collapse=FALSE,
-            col="darkblue",
-            shape="box",
-            fontcolor.group="black",
-            fontsize.group=18,
-            cex.title=0.8
-        )
-    })
-}
 
 
 
@@ -217,8 +225,10 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
 
 
 
-.getTxTrack <- function(geneModel,
-                        targetGene
+.getGeneTrack <- function(geneModel,
+                          targetGene,
+                          from,
+                          to
                         
 ){
     if (is.null(geneModel) || is.null(targetGene)){ # need more checks (that return errors)
@@ -235,12 +245,93 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
         warning("targetGene not found in geneModel")
         return()
     }
+    ## get tx_id whose start/end exceed limits (for each limit)
+    txLeft <- transcripts$tx_id[BiocGenerics::start(transcripts) < from]
+    txRight <- transcripts$tx_id[BiocGenerics::end(transcripts) > to]
+    extendDistance <- to - from
+    
+    transcripts <- IRanges::restrict(transcripts,
+                                     start=from,
+                                     end=to)
     splicings <- crisprDesign::queryTxObject(
         txObject=geneModel,
         featureType="exons",
         queryColumn="gene_symbol",
         queryValue=targetGene
     )
+    splicings <- IRanges::restrict(splicings,
+                                   start=from,
+                                   end=to)
+    
+    ## for tx_id above that exceed limit, append 1bp exon beyond limit
+    exonLeft <- lapply(txLeft, function(x){
+        strand <- unique(BiocGenerics::strand(splicings))
+        currentRanks <- splicings$exon_rank[splicings$tx_id == x]
+        if (strand == "+"){
+            exon_rank <- max(1, min(currentRanks) - 1)
+        } else {
+            exon_rank <- max(currentRanks) + 1
+        }
+        GenomicRanges::GRanges(
+            seqnames=unique(GenomeInfoDb::seqnames(splicings)),
+            ranges=IRanges::IRanges(start=from-extendDistance, width=1),
+            strand=strand,
+            tx_id=x,
+            gene_id=unique(splicings$gene_id),
+            protein_id=NA,
+            tx_type=NA,
+            gene_symbol=NA,
+            exon_id=0,
+            exon_rank=exon_rank,
+            cds_start=NA,
+            cds_end=NA,
+            tx_start=NA,
+            tx_end=NA,
+            cds_len=NA,
+            exon_start=NA,
+            exon_end=NA
+        )
+    })
+    exonLeft <- Reduce(c, exonLeft)
+    
+    exonRight <- lapply(txRight, function(x){
+        strand <- unique(BiocGenerics::strand(splicings))
+        currentRanks <- splicings$exon_rank[splicings$tx_id == x]
+        if (strand == "+"){
+            exon_rank <- max(currentRanks) + 1
+        } else {
+            exon_rank <- max(1, min(currentRanks) - 1)
+        }
+        GenomicRanges::GRanges(
+            seqnames=unique(GenomeInfoDb::seqnames(splicings)),
+            ranges=IRanges::IRanges(start=to+extendDistance, width=1),
+            strand=strand,
+            tx_id=x,
+            gene_id=unique(splicings$gene_id),
+            protein_id=NA,
+            tx_type=NA,
+            gene_symbol=NA,
+            exon_id=999999999,
+            exon_rank=exon_rank,
+            cds_start=NA,
+            cds_end=NA,
+            tx_start=NA,
+            tx_end=NA,
+            cds_len=NA,
+            exon_start=NA,
+            exon_end=NA
+        )
+    })
+    exonRight <- Reduce(c, exonRight)
+    
+    splicings <- c(splicings, exonLeft, exonRight)
+    
+    ## adjust start/end of cds and exons
+    for (i in seq_along(splicings)){
+        splicings$cds_start[i] <- max(BiocGenerics::start(splicings[i]), splicings$cds_start[i])
+        splicings$cds_end[i] <- min(BiocGenerics::end(splicings[i]), splicings$cds_end[i])
+    }
+    
     chrominfo <- GenomeInfoDb::seqinfo(geneModel[["transcripts"]])
     chrominfo <- data.frame(
         chrom=GenomeInfoDb::seqnames(chrominfo),
@@ -309,12 +400,106 @@ plotGuideSets <- function(guideSets, # list of guideSets (names optional)
 
 
 
+#' @importFrom crisprBase getProtospacerRanges getPamRanges
+#' @importFrom crisprDesign crisprNuclease
+#' @importFrom GenomicRanges punion
+#' @importFrom methods as
+#' @importFrom S4Vectors mcols<-
+#' @importFrom BiocGenerics start end strand
+#' @importFrom GenomeInfoDb seqnames seqinfo seqlengths
+#' @importFrom GenomicFeatures makeTxDb
+#' @importFrom Gviz GeneRegionTrack
+.getGuideTrack <- function(guideSet,
+                           stacking="squish"
+){
+    protospacerRanges <- crisprBase::getProtospacerRanges(
+        gr=guideSet,
+        nuclease=crisprDesign::crisprNuclease(guideSet),
+    )
+    pamRanges <- crisprBase::getPamRanges(
+        gr=guideSet,
+        nuclease=crisprDesign::crisprNuclease(guideSet)
+    )
+    transcripts <- GenomicRanges::punion(
+        methods::as(protospacerRanges, "GRanges"),
+        methods::as(pamRanges, "GRanges")
+    )
+    S4Vectors::mcols(transcripts)[["tx_id"]] <- seq_along(transcripts)
+    S4Vectors::mcols(transcripts)[["exon_rank"]] <- 1
+    S4Vectors::mcols(transcripts)[["exon_id"]] <- as.integer(seq_along(transcripts))
+    S4Vectors::mcols(transcripts)[["cds_start"]] <- BiocGenerics::start(protospacerRanges)
+    S4Vectors::mcols(transcripts)[["cds_end"]] <- BiocGenerics::end(protospacerRanges)
+    
+    tx <- data.frame(
+        tx_id=transcripts$tx_id,
+        tx_chrom=as.character(GenomeInfoDb::seqnames(transcripts)),
+        tx_strand=as.character(BiocGenerics::strand(transcripts)),
+        tx_start=as.integer(BiocGenerics::start(transcripts)),
+        tx_end=as.integer(BiocGenerics::end(transcripts)),
+        tx_name=names(guideSet),
+        gene_id="gRNAs")
+    splicings <- data.frame(
+        tx_id=transcripts$tx_id,
+        exon_rank=transcripts$exon_rank,
+        exon_id=transcripts$exon_id,
+        exon_start=as.integer(BiocGenerics::start(transcripts)),
+        exon_end=as.integer(BiocGenerics::end(transcripts)),
+        cds_start=transcripts$cds_start,
+        cds_end=transcripts$cds_end)
+    chrominfo <- GenomeInfoDb::seqinfo(guideSet)
+    chrominfo <- data.frame(
+        chrom=GenomeInfoDb::seqnames(chrominfo),
+        length=GenomeInfoDb::seqlengths(chrominfo)
+    )
+    txdb <- suppressWarnings(
+        GenomicFeatures::makeTxDb(
+            transcripts=tx,
+            splicings=splicings,
+            chrominfo=chrominfo
+        )
+    )
+    
+    Gviz::GeneRegionTrack(
+        range=txdb,
+        name="gRNAs",
+        showID=TRUE,
+        fill="lightblue",
+        geneSymbol=TRUE,
+        cex=2,
+        cex.title=1,
+        transcriptAnnotation="transcript",
+        fontcolor.group="black",
+        col.line="black",
+        fontsize.group=20,
+        min.height=12
+    )
+}
 
 
 
 
 
 
+
+.getSequenceTrack <- function(chr,
+                              bsgenome
+){
+    Gviz::SequenceTrack(
+        sequence=bsgenome,
+        chromosome=chr,
+        add53=TRUE
+    )
+}
+
+
+
+
+
+
+
+
+
+## other ======================================================================
 
 
 
