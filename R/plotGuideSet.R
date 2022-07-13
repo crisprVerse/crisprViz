@@ -1,31 +1,57 @@
-
-# library(crisprDesign)
-# library(crisprDesignData)
-# library(crisprViz)
-# data(guideSetExample)
-# data(txdb_human)
-# gs <- guideSetExample[1:10]
-# targetGene <- "IQSEC3"
-# geneModel <- txdb_human
-# plotGuideSets(list(gs),
-#               ideogram=Ideogram_GRCh38,
-#               geneModel=geneModel,
-#               targetGene=targetGene,
-#               from=66500,
-#               to=67500,
-#               genome="hg38")
-
-# kras <- queryTxObject(txdb_human, "cds", "gene_symbol", "KRAS")
-# kras <- kras[1]
-# gs <- findSpacers(kras, crisprNuclease=SpCas9, bsgenome=BSgenome.Hsapiens.UCSC.hg38)
-# ideogram <- readRDS("inst/shiny/data/ideogram_hg38.rds")
-
-
-
-
-
-
-plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking to be dense?
+#' @title Plotting a GuideSet and other genomic annotation
+#' 
+#' @description Function to plot guide targets stored in a
+#'     \linkS4class{GuideSet} object in a gene browser view supported by
+#'     \code{\link[Gviz]}. Target gene isoforms and other genomic annotation,
+#'     along with the target chromosome ideogram and sequence, may also be
+#'     added, permitting a comprehensive visualization of the genomic context
+#'     targeted by spacers in the \linkS4Class{GuideSet}.
+#' 
+#' @param guideSet tbd
+#' @param geneModel tbd
+#' @param targetGene tbd
+#' @param annotations tbd
+#' @param from,to tbd
+#' @param extend.left,extend.right tbd
+#' @param bands tbd
+#' @param guideStacking tbd
+#' @param bsgenome tbd
+#' @param pamSiteOnly tbd
+#' @param showGuideLabels tbd
+#' @param onTargetScore tbd
+#' @param includeSNPTrack tbd
+#' @param displayPars tbd (possible to implement?)
+#' 
+#' @return A Gviz plot... see ?Gviz::plotTracks
+#' 
+#' @author Luke Hoberecht, Jean-Philippe Fortin
+#' 
+#' @seealso \code{\link{plotMultipleGuideSets}}
+#' 
+#' @examples
+#' \dontrun{
+#' ## WIP =====================================================================
+#' library(crisprDesign)
+#' data(guideSetExample)
+#' library(crisprDesignData)
+#' data(txdb_human)
+#' gs <- guideSetExample[1:10]
+#' targetGene <- "IQSEC3"
+#' geneModel <- txdb_human
+#' plotGuideSet(gs,
+#'              geneModel=geneModel,
+#'              targetGene=targetGene)
+#'
+#' kras <- queryTxObject(txdb_human, "cds", "gene_symbol", "KRAS")
+#' kras <- kras[1]
+#' gs <- findSpacers(kras, crisprNuclease=SpCas9, bsgenome=BSgenome.Hsapiens.UCSC.hg38)
+#' ideogram <- readRDS("inst/shiny/data/ideogram_hg38.rds")
+#' }
+#' 
+#' @export
+#' @importFrom S4Vectors isTRUEorFALSE
+#' @importFrom Gviz plotTracks
+plotGuideSet <- function(guideSet,
                          geneModel=NULL,
                          targetGene=NULL, # gene symbol or id
                          annotations=list(), # named list of annotations to plot (GRanges)
@@ -37,9 +63,10 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
                          guideStacking="squish", # how to stack all guides on a single track (squish, dense, or hide) or NA to have each guide occupy a separate track
                          bsgenome=NULL, # used in SequenceTrack
                          pamSiteOnly=FALSE, # whether to plot only the PAM site for spacers or plot the spacer and PAM sequence (default)
+                         showGuideLabels=TRUE, # if applicable
                          onTargetScore=NULL, # color coding guides...need to add legend
-                         includeSNPTrack=TRUE
-                         # displayOptions=NULL # named list of options that can be passed to subfunctions
+                         includeSNPTrack=TRUE,
+                         displayPars=NULL # named list of options that can be passed to subfunctions
 ){
     ## check inputs
     guideSet <- .validateGuideSet(guideSet)
@@ -59,23 +86,18 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         S4Vectors::isTRUEorFALSE(pamSiteOnly)
     })
     
-    
-    
-    
-    
-    
-    
-    
-    
     ## set tracks
-    ideogramTrack <- .getIdeogramTrack(chr=chr,
-                                       genome=unique(GenomeInfoDb::genome(guideSet)),
-                                       bands=bands)
+    ideogramTrack <- .getIdeogramTrack(
+        chr=chr,
+        genome=unique(GenomeInfoDb::genome(guideSet)),
+        bands=bands
+    )
     genomeAxisTrack <- .getGenomeAxisTrack()
     guideTrack <- .getGuideTrack(
         guideSet=guideSet,
         guideStacking=guideStacking,
         pamSiteOnly=pamSiteOnly,
+        showGuideLabels=showGuideLabels,
         onTargetScore=onTargetScore
     )
     
@@ -159,6 +181,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
 
 
 
+#' @importFrom Gviz IdeogramTrack
 .getIdeogramTrack <- function(chr,
                               genome,
                               bands
@@ -178,6 +201,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
 
 
 
+#' @importFrom Gviz GenomeAxisTrack
 .getGenomeAxisTrack <- function(
 ){
     Gviz::GenomeAxisTrack(
@@ -239,13 +263,22 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
 
 
 
+
+#' @importFrom crisprDesign queryTxObject
+#' @importFrom BiocGenerics start end strand
+#' @importFrom IRanges restrict
+#' @importClassesFrom GenomicRanges GRanges
+#' @importFrom GenomeInfoDb seqnames seqinfo seqlengths
+#' @importClassesFrom IRanges IRanges
+#' @importFrom GenomicFeatures makeTxDb
+#' @importFrom Gviz GeneRegionTrack transcript strand
 .getGeneTrack <- function(geneModel,
                           targetGene,
                           from,
                           to
                         
 ){
-    if (is.null(geneModel) || is.null(targetGene)){ # need more checks (that return errors)
+    if (is.null(geneModel) || is.null(targetGene)){
         return()
     }
     
@@ -256,7 +289,8 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         queryValue=targetGene
     )
     if (length(transcripts) == 0){
-        warning("targetGene not found in geneModel")
+        warning("targetGene not found in geneModel, ignoring.",
+                immediate.=TRUE)
         return()
     }
     ## get tx_id whose start/end exceed limits (for each limit)
@@ -277,13 +311,14 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
     splicings <- IRanges::restrict(splicings,
                                    start=from,
                                    end=to)
+    splicings$exon_rank <- splicings$exon_rank + 1 # for upstream shift, if necessary
     
-    ## for tx_id above that exceed limit, append 1bp exon beyond limit
+    ## for tx_id above that exceed limit, append "exon" beyond limit
     exonLeft <- lapply(txLeft, function(x){
         strand <- unique(BiocGenerics::strand(splicings))
         currentRanks <- splicings$exon_rank[splicings$tx_id == x]
         if (strand == "+"){
-            exon_rank <- max(1, min(currentRanks) - 1)
+            exon_rank <- min(currentRanks) - 1
         } else {
             exon_rank <- max(currentRanks) + 1
         }
@@ -315,7 +350,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         if (strand == "+"){
             exon_rank <- max(currentRanks) + 1
         } else {
-            exon_rank <- max(1, min(currentRanks) - 1)
+            exon_rank <- min(currentRanks) - 1
         }
         GenomicRanges::GRanges(
             seqnames=unique(GenomeInfoDb::seqnames(splicings)),
@@ -373,6 +408,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         exon_end=as.integer(BiocGenerics::end(splicings)),
         cds_start=splicings$cds_start,
         cds_end=splicings$cds_end)
+    
     txdb <- suppressWarnings(
         GenomicFeatures::makeTxDb(
             transcripts=transcripts,
@@ -387,24 +423,18 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         showID=TRUE,
         # fill="darkorange",
         geneSymbol=TRUE,
-        # cex=2,
-        # cex.title=1,
         transcriptAnnotation="transcript",
         fontcolor.group="black",
-        col.line="black",
-        # fontsize.group=20,
-        min.height=12
+        col.line="black"
     )
     
-    txLabel <- paste0(targetGene, " (", Gviz::transcript(txTrack), ")")
-    txStrand <- unique(transcripts$tx_strand)
-    if (txStrand == "+"){
-        txLabel <- paste(txLabel, "->")
-    } else {
-        txLabel <- paste("<-", txLabel)
-    }
-    Gviz::transcript(txTrack) <- txLabel
     
+    ## separate function to add direction to labels
+    txTrack <- .addStrandToLabel(
+        track=txTrack,
+        label=paste0(targetGene, " (", Gviz::transcript(txTrack), ")"),
+        strand=Gviz::strand(txTrack)
+    )
     return(txTrack)
 }
 
@@ -426,7 +456,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         seqnames=chr,
         ranges=IRanges::IRanges(start=from, end=to)
     )
-    lapply(seq_along(annotations), function(x){
+    annTracks <- lapply(seq_along(annotations), function(x){
         overlaps <- suppressWarnings(GenomicRanges::findOverlaps(
             annotations[[x]],
             windowRange,
@@ -442,15 +472,16 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
             name=names(annotations)[x]
         )
     })
+    return(annTracks)
 }
 
 
 
 
 
+#' @importFrom crisprDesign snps
 #' @importClassesFrom GenomicRanges GRanges
 #' @importClassesFrom IRanges IRanges
-#' @importFrom crisprDesign snps
 #' @importFrom Gviz AnnotationTrack
 .getSnpTrack <- function(guideSet,
                          chr
@@ -467,7 +498,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
     )
     names(snpRanges) <- snps$rs
     
-    Gviz::AnnotationTrack(
+    snpTrack <- Gviz::AnnotationTrack(
         snpRanges,
         chromosome=chr,
         shape="box",
@@ -475,6 +506,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         group=names(snpRanges),
         name="SNP"
     )
+    return(snpTrack)
 }
 
 
@@ -491,6 +523,71 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
 
 
 
+#' @importFrom GenomicFeatures transcripts
+#' @importFrom Gviz GeneRegionTrack displayPars<- transcript strand
+.getGuideTrack <- function(guideSet,
+                           guideStacking,
+                           pamSiteOnly,
+                           showGuideLabels,
+                           onTargetScore
+){
+    if (pamSiteOnly){
+        guideRanges <- guideSet
+        if (is.na(guideStacking)){
+            guideRanges <- split(guideRanges, f=names(guideRanges))
+        } else {
+            guideRanges <- list(guideRanges)
+        }
+    } else {
+        guideRanges <- .extractGuideRanges(
+            guideSet=guideSet,
+            guideStacking=guideStacking)
+    }
+    
+    if (is.na(guideStacking)){
+        guideStacking <- "squish"
+        name <- ""
+    } else {
+        name <- "gRNAs"
+    }
+    
+    colors <- .getScoreColor(
+        guideSet=guideSet,
+        onTargetScore=onTargetScore
+    )
+    
+    guideTracks <- lapply(guideRanges, function(x){
+        if (methods::is(x, "TxDb")){
+            names <- GenomicFeatures::transcripts(x)$tx_name
+        } else {
+            names <- names(x)
+        }
+        track <- Gviz::GeneRegionTrack(
+            range=x,
+            name=name,
+            symbol=names,
+            showID=TRUE,
+            geneSymbol=TRUE,
+            fill=colors,
+            stacking=guideStacking,
+            fontcolor.group="black",
+            col.line="black"
+        )
+        if (showGuideLabels){
+            Gviz::displayPars(track) <- list(transcriptAnnotation="transcript")
+            track <- .addStrandToLabel(
+                track=track,
+                label=Gviz::transcript(track),
+                strand=Gviz::strand(track)
+            )
+        }
+        track
+    })
+    return(guideTracks)
+}
+
+
+
 
 #' @importFrom crisprBase getProtospacerRanges getPamRanges
 #' @importFrom crisprDesign crisprNuclease
@@ -500,17 +597,9 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
 #' @importFrom BiocGenerics start end strand
 #' @importFrom GenomeInfoDb seqnames seqinfo seqlengths
 #' @importFrom GenomicFeatures makeTxDb
-#' @importFrom Gviz GeneRegionTrack
-.getGuideTrack <- function(guideSet,
-                           guideStacking,
-                           pamSiteOnly,
-                           onTargetScore
+.extractGuideRanges <- function(guideSet,
+                                guideStacking
 ){
-    if (pamSiteOnly){
-        # function to extract pam sites as txdb coords
-    } else {
-        # current function
-    }
     protospacerRanges <- crisprBase::getProtospacerRanges(
         gr=guideSet,
         nuclease=crisprDesign::crisprNuclease(guideSet),
@@ -523,6 +612,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         methods::as(protospacerRanges, "GRanges"),
         methods::as(pamRanges, "GRanges")
     )
+    
     S4Vectors::mcols(transcripts)[["tx_id"]] <- seq_along(transcripts)
     S4Vectors::mcols(transcripts)[["exon_rank"]] <- 1
     S4Vectors::mcols(transcripts)[["exon_id"]] <- as.integer(seq_along(transcripts))
@@ -539,6 +629,7 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         gene_id="gRNAs")
     splicings <- data.frame(
         tx_id=transcripts$tx_id,
+        tx_strand=as.character(BiocGenerics::strand(transcripts)),
         exon_rank=transcripts$exon_rank,
         exon_id=transcripts$exon_id,
         exon_start=as.integer(BiocGenerics::start(transcripts)),
@@ -561,8 +652,6 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
                 )
             )
         })
-        guideStacking <- "squish"
-        name <- ""
     } else {
         txdb <- list(
             suppressWarnings(
@@ -573,34 +662,13 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
                 )
             )
         )
-        name <- "gRNAs"
     }
-    
-    colors <- .getScoreColor(
-        guideSet=guideSet,
-        onTargetScore=onTargetScore
-    )
-    
-    guideTracks <- lapply(txdb, function(x){
-        Gviz::GeneRegionTrack(
-            range=x,
-            name=name,
-            showID=TRUE,
-            fill=colors,
-            geneSymbol=TRUE,
-            stacking=guideStacking,
-            # cex=2,
-            # cex.title=1,
-            transcriptAnnotation="transcript",
-            fontcolor.group="black",
-            col.line="black"#,
-            # fontsize.group=20,
-            # min.height=12
-        )
-    })
-    
-    return(guideTracks)
+    return(txdb)
 }
+
+
+
+
 
 
 
@@ -635,6 +703,30 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
 ## other ======================================================================
 
 
+
+#' @importFrom Gviz transcript
+.addStrandToLabel <- function(track,
+                              label,
+                              strand
+){
+    forwardStrand <- strand == "+"
+    label[forwardStrand] <- paste(label[forwardStrand], "->", recycle0=TRUE)
+    label[!forwardStrand] <- paste("<-", label[!forwardStrand], recycle0=TRUE)
+    Gviz::transcript(track) <- label
+    return(track)
+}
+
+
+
+
+
+
+
+
+
+
+#' @importFrom S4Vectors mcols
+#' @importFrom grDevices colorRampPalette
 .getScoreColor <- function(guideSet,
                            onTargetScore,
                            score0="#D2D2D2",
@@ -648,11 +740,9 @@ plotGuideSet <- function(guideSet, # change to guideSets...force guideStacking t
         return("lightblue") # default color
     }
     scores <- S4Vectors::mcols(guideSet)[[onTargetScore]]
-    colorFunction <- colorRampPalette(c(score0, score1))
+    colorFunction <- grDevices::colorRampPalette(c(score0, score1))
     colors <- colorFunction(100)
     intervals <- cut(scores, breaks=seq(0, 1, by=0.01))
     intervals <- as.numeric(intervals)
     return(colors[intervals])
 }
-
-
