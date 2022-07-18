@@ -5,7 +5,7 @@
 \title{Plotting a GuideSet and other genomic annotation}
 \usage{
 plotMultipleGuideSets(
-  guideSets,
+  x,
   geneModel = NULL,
   targetGene = NULL,
   annotations = list(),
@@ -13,31 +13,34 @@ plotMultipleGuideSets(
   to = NULL,
   extend.left = 0,
   extend.right = 0,
+  includeIdeogram = TRUE,
   bands = NULL,
   bsgenome = NULL,
-  onTargetScore = NULL,
+  onTargetScores = NULL,
   includeSNPTrack = TRUE,
   displayPars = NULL
 )
 }
 \arguments{
-\item{guideSets}{tbd}
+\item{x}{named list of GuideSets}
 
 \item{geneModel}{tbd}
 
-\item{targetGene}{tbd}
+\item{targetGene}{gene symbol or id}
 
-\item{annotations}{tbd}
+\item{annotations}{named list of annotations to plot (GRanges)}
 
-\item{from, to}{tbd}
+\item{from, to}{see ?plotTracks}
 
-\item{extend.left, extend.right}{tbd}
+\item{extend.left, extend.right}{see ?plotTracks}
 
-\item{bands}{tbd}
+\item{includeIdeogram}{boolean}
 
-\item{bsgenome}{tbd}
+\item{bands}{see ?IdeogramTrack}
 
-\item{onTargetScore}{tbd}
+\item{bsgenome}{used in SequenceTrack}
+
+\item{onTargetScores}{list of on-target scores}
 
 \item{includeSNPTrack}{tbd}
 
@@ -49,7 +52,7 @@ A Gviz plot... see ?Gviz::plotTracks
 \description{
 Function to plot guide targets stored in a
 \linkS4class{GuideSet} object in a gene browser view supported by
-\code{\link[Gviz]}. Target gene isoforms and other genomic annotation,
+\code{Gviz}. Target gene isoforms and other genomic annotation,
 along with the target chromosome ideogram and sequence, may also be
 added, permitting a comprehensive visualization of the genomic context
 targeted by spacers in the \linkS4Class{GuideSet}.
@@ -61,6 +64,7 @@ library(crisprDesign)
 data(guideSetExample)
 library(crisprDesignData)
 data(txdb_human)
+library(BSgenome.Hsapiens.UCSC.hg38)
 gs <- guideSetExample[1:10]
 targetGene <- "IQSEC3"
 geneModel <- txdb_human

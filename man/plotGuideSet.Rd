@@ -5,7 +5,7 @@
 \title{Plotting a GuideSet and other genomic annotation}
 \usage{
 plotGuideSet(
-  guideSet,
+  x,
   geneModel = NULL,
   targetGene = NULL,
   annotations = list(),
@@ -20,38 +20,37 @@ plotGuideSet(
   pamSiteOnly = FALSE,
   showGuideLabels = TRUE,
   onTargetScore = NULL,
-  includeSNPTrack = TRUE,
-  displayPars = NULL
+  includeSNPTrack = TRUE
 )
 }
 \arguments{
-\item{guideSet}{tbd}
+\item{x}{tbd}
 
 \item{geneModel}{tbd}
 
-\item{targetGene}{tbd}
+\item{targetGene}{gene symbol or Ensembl ID}
 
-\item{annotations}{tbd}
+\item{annotations}{named list of annotations to plot (GRanges)}
 
-\item{from, to}{tbd}
+\item{from, to}{see ?plotTracks}
 
-\item{extend.left, extend.right}{tbd}
+\item{extend.left, extend.right}{see ?plotTracks}
 
-\item{bands}{tbd}
+\item{includeIdeogram}{boolean}
 
-\item{guideStacking}{tbd}
+\item{bands}{see ?IdeogramTrack}
 
-\item{bsgenome}{tbd}
+\item{guideStacking}{how to stack all guides on a single track (squish, dense, or hide) or NA to have each guide occupy a separate track}
 
-\item{pamSiteOnly}{tbd}
+\item{bsgenome}{used in SequenceTrack}
+
+\item{pamSiteOnly}{whether to plot only the PAM site for spacers or plot the spacer and PAM sequence (default)}
 
 \item{showGuideLabels}{tbd}
 
-\item{onTargetScore}{tbd}
+\item{onTargetScore}{color coding guides...need to add legend}
 
 \item{includeSNPTrack}{tbd}
-
-\item{displayPars}{tbd (possible to implement?)}
 }
 \value{
 A Gviz plot... see ?Gviz::plotTracks
@@ -71,6 +70,7 @@ library(crisprDesign)
 data(guideSetExample)
 library(crisprDesignData)
 data(txdb_human)
+library(BSgenome.Hsapiens.UCSC.hg38)
 gs <- guideSetExample[1:10]
 targetGene <- "IQSEC3"
 geneModel <- txdb_human

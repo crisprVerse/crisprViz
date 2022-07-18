@@ -2,20 +2,21 @@
 #' 
 #' @description Function to plot guide targets stored in a
 #'     \linkS4class{GuideSet} object in a gene browser view supported by
-#'     \code{\link[Gviz]}. Target gene isoforms and other genomic annotation,
+#'     \code{Gviz}. Target gene isoforms and other genomic annotation,
 #'     along with the target chromosome ideogram and sequence, may also be
 #'     added, permitting a comprehensive visualization of the genomic context
 #'     targeted by spacers in the \linkS4Class{GuideSet}.
 #' 
 #' @param x named list of GuideSets
 #' @param geneModel tbd
-#' @param targetGene tbd
-#' @param annotations tbd
-#' @param from,to tbd
-#' @param extend.left,extend.right tbd
-#' @param bands tbd
-#' @param bsgenome tbd
-#' @param onTargetScore tbd
+#' @param targetGene gene symbol or id
+#' @param annotations named list of annotations to plot (GRanges)
+#' @param from,to see ?plotTracks
+#' @param extend.left,extend.right see ?plotTracks
+#' @param includeIdeogram boolean
+#' @param bands see ?IdeogramTrack
+#' @param bsgenome used in SequenceTrack
+#' @param onTargetScores list of on-target scores
 #' @param includeSNPTrack tbd
 #' @param displayPars tbd (possible to implement?)
 #' 
@@ -32,6 +33,7 @@
 #' data(guideSetExample)
 #' library(crisprDesignData)
 #' data(txdb_human)
+#' library(BSgenome.Hsapiens.UCSC.hg38)
 #' gs <- guideSetExample[1:10]
 #' targetGene <- "IQSEC3"
 #' geneModel <- txdb_human
@@ -48,16 +50,16 @@
 #' @export
 plotMultipleGuideSets <- function(x,
                                   geneModel=NULL,
-                                  targetGene=NULL, # gene symbol or id
-                                  annotations=list(), # named list of annotations to plot (GRanges)
-                                  from=NULL, # see ?plotTracks
-                                  to=NULL, # see ?plotTracks
-                                  extend.left=0, # see ?plotTracks
-                                  extend.right=0, # see ?plotTracks
+                                  targetGene=NULL,
+                                  annotations=list(),
+                                  from=NULL,
+                                  to=NULL,
+                                  extend.left=0,
+                                  extend.right=0,
                                   includeIdeogram=TRUE,
-                                  bands=NULL, # see ?IdeogramTrack
-                                  bsgenome=NULL, # used in SequenceTrack
-                                  onTargetScore=NULL, # color coding guides...need to add legend
+                                  bands=NULL,
+                                  bsgenome=NULL,
+                                  onTargetScores=NULL,
                                   includeSNPTrack=TRUE,
                                   displayPars=NULL
 ){
@@ -70,7 +72,9 @@ plotMultipleGuideSets <- function(x,
     })
     
     ## set tracks
-    genome <- lapply(guideSets, GenomeInfoDb::genome)
+    genome <- lapply(guideSets, function(x){
+        unique(GenomeInfoDb::genome(x))
+    })
     genome <- unique(unlist(genome))
     ideogramTrack <- .getIdeogramTrack(
         includeIdeogram=includeIdeogram,
@@ -79,22 +83,19 @@ plotMultipleGuideSets <- function(x,
         bands=bands
     )
     genomeAxisTrack <- .getGenomeAxisTrack()
-    ## guide track is different
-    guideTrack <- lapply(guideSets,
-                         .getGuideTrack,
-                         guideStacking="dense",
-                         pamSiteOnly=TRUE,
-                         showGuideLabels=FALSE,
-                         onTargetScore=onTargetScore)
-    guideTrack <- unlist(guideTrack)
-    # print(displayPars(guideTrack[[1]]))
+    guideTrack <- .getGuideTrackList(
+        guideSets=guideSets,
+        onTargetScores=onTargetScores
+    )
     
     ## set plot range
     plotWindowMin <- lapply(guideTrack, min)
     plotWindowMin <- min(unlist(plotWindowMin))
-    plotWindowMax <- lapply(guideTrack, min)
+    plotWindowMax <- lapply(guideTrack, max)
     plotWindowMax <- max(unlist(plotWindowMax))
-    plotWindowSize <- plotWindowMax - plotWindowMin
+    minimumWindowMargin <- 20
+    plotWindowSize <- max(plotWindowMax - plotWindowMin,
+                          minimumWindowMargin)
     if (is.null(from)){
         from <- plotWindowMin - plotWindowSize
     }
@@ -102,6 +103,7 @@ plotMultipleGuideSets <- function(x,
         to <- plotWindowMax + plotWindowSize
     }
     
+    ## have geneTrack adjust to plot window
     geneTrack <- .getGeneTrack(geneModel=geneModel,
                                targetGene=targetGene,
                                from=from - extend.left,
@@ -116,7 +118,7 @@ plotMultipleGuideSets <- function(x,
     
     if (includeSNPTrack){
         snpTrack <- .getSnpTrackFromList(
-            guideSet=guideSets,
+            guideSets=guideSets,
             chr=chr
         )
     } else {
@@ -193,5 +195,43 @@ plotMultipleGuideSets <- function(x,
     )
     return(snpTrack)
 }
+
+
+
+
+
+
+
+#' @importFrom GenomicFeatures transcripts
+#' @importFrom Gviz GeneRegionTrack displayPars<- transcript strand
+.getGuideTrackList <- function(guideSets,
+                               onTargetScores
+){
+    lapply(seq_along(guideSets), function(x){
+        guideRanges <- guideSets[[x]]
+        title <- names(guideSets)[x]
+        onTargetScore <- onTargetScores[[x]]
+        
+        colors <- .getScoreColors(
+            guideSet=guideRanges,
+            onTargetScore=onTargetScore
+        )
+        
+        track <- Gviz::GeneRegionTrack(
+            range=guideRanges,
+            name=title,
+            stacking="dense",
+            fontcolor.group="black",
+            col.line="black"
+        )
+        Gviz::group(track) <- names(guideRanges)
+        Gviz::displayPars(track)[["fill"]] <- colors[names(guideRanges)]
+        track
+    })
+}
+
+
+
+
 
 

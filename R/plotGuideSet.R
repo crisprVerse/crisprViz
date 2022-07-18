@@ -13,6 +13,7 @@
 #' @param annotations  named list of annotations to plot (GRanges)
 #' @param from,to  see ?plotTracks
 #' @param extend.left,extend.right  see ?plotTracks
+#' @param includeIdeogram boolean
 #' @param bands see ?IdeogramTrack
 #' @param guideStacking  how to stack all guides on a single track (squish, dense, or hide) or NA to have each guide occupy a separate track
 #' @param bsgenome used in SequenceTrack
@@ -34,6 +35,7 @@
 #' data(guideSetExample)
 #' library(crisprDesignData)
 #' data(txdb_human)
+#' library(BSgenome.Hsapiens.UCSC.hg38)
 #' gs <- guideSetExample[1:10]
 #' targetGene <- "IQSEC3"
 #' geneModel <- txdb_human
@@ -150,7 +152,6 @@ plotGuideSet <- function(x,
             bsgenome=bsgenome
         )
     }
-    
     
     Gviz::plotTracks(
         tracks,
@@ -524,7 +525,6 @@ plotGuideSet <- function(x,
     
     colors <- .getScoreColors(
         guideSet=guideSet,
-        names=names,
         onTargetScore=onTargetScore
     )
     
@@ -707,7 +707,6 @@ plotGuideSet <- function(x,
 #' @importFrom S4Vectors mcols
 #' @importFrom grDevices colorRampPalette
 .getScoreColors <- function(guideSet,
-                            names,
                             onTargetScore,
                             score0="#D2D2D2",
                             score1="#000080"
@@ -717,7 +716,9 @@ plotGuideSet <- function(x,
         guideSet=guideSet
     )
     if (is.null(onTargetScore)){
-        return("lightblue") # default color
+        scoreColors <- rep("lightblue", length(guideSet))
+        names(scoreColors) <- names(guideSet)
+        return(scoreColors) # default color
     }
     scores <- S4Vectors::mcols(guideSet)[[onTargetScore]]
     colorFunction <- grDevices::colorRampPalette(c(score0, score1))
