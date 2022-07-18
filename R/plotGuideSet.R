@@ -2,25 +2,24 @@
 #' 
 #' @description Function to plot guide targets stored in a
 #'     \linkS4class{GuideSet} object in a gene browser view supported by
-#'     \code{\link[Gviz]}. Target gene isoforms and other genomic annotation,
+#'     \code{Gviz}. Target gene isoforms and other genomic annotation,
 #'     along with the target chromosome ideogram and sequence, may also be
 #'     added, permitting a comprehensive visualization of the genomic context
 #'     targeted by spacers in the \linkS4Class{GuideSet}.
 #' 
-#' @param guideSet tbd
+#' @param x tbd
 #' @param geneModel tbd
-#' @param targetGene tbd
-#' @param annotations tbd
-#' @param from,to tbd
-#' @param extend.left,extend.right tbd
-#' @param bands tbd
-#' @param guideStacking tbd
-#' @param bsgenome tbd
-#' @param pamSiteOnly tbd
+#' @param targetGene gene symbol or Ensembl ID
+#' @param annotations  named list of annotations to plot (GRanges)
+#' @param from,to  see ?plotTracks
+#' @param extend.left,extend.right  see ?plotTracks
+#' @param bands see ?IdeogramTrack
+#' @param guideStacking  how to stack all guides on a single track (squish, dense, or hide) or NA to have each guide occupy a separate track
+#' @param bsgenome used in SequenceTrack
+#' @param pamSiteOnly whether to plot only the PAM site for spacers or plot the spacer and PAM sequence (default)
 #' @param showGuideLabels tbd
-#' @param onTargetScore tbd
+#' @param onTargetScore  color coding guides...need to add legend
 #' @param includeSNPTrack tbd
-#' @param displayPars tbd (possible to implement?)
 #' 
 #' @return A Gviz plot... see ?Gviz::plotTracks
 #' 
@@ -51,35 +50,35 @@
 #' @export
 #' @importFrom S4Vectors isTRUEorFALSE
 #' @importFrom Gviz plotTracks
-plotGuideSet <- function(guideSet,
+plotGuideSet <- function(x,
                          geneModel=NULL,
-                         targetGene=NULL, # gene symbol or id
-                         annotations=list(), # named list of annotations to plot (GRanges)
-                         from=NULL, # see ?plotTracks
-                         to=NULL, # see ?plotTracks
-                         extend.left=0, # see ?plotTracks
-                         extend.right=0, # see ?plotTracks
-                         bands=NULL, # see ?IdeogramTrack
-                         guideStacking="squish", # how to stack all guides on a single track (squish, dense, or hide) or NA to have each guide occupy a separate track
-                         bsgenome=NULL, # used in SequenceTrack
-                         pamSiteOnly=FALSE, # whether to plot only the PAM site for spacers or plot the spacer and PAM sequence (default)
-                         showGuideLabels=TRUE, # if applicable
-                         onTargetScore=NULL, # color coding guides...need to add legend
-                         includeSNPTrack=TRUE,
-                         displayPars=NULL # named list of options that can be passed to subfunctions
+                         targetGene=NULL,
+                         annotations=list(),
+                         from=NULL,
+                         to=NULL,
+                         extend.left=0,
+                         extend.right=0,
+                         includeIdeogram=TRUE,
+                         bands=NULL,
+                         guideStacking="squish",
+                         bsgenome=NULL,
+                         pamSiteOnly=FALSE,
+                         showGuideLabels=TRUE,
+                         onTargetScore=NULL,
+                         includeSNPTrack=TRUE
 ){
     ## check inputs
-    guideSet <- .validateGuideSet(guideSet)
+    guideSet <- .validateGuideSet(x)
     chr <- .validateSingleChr(guideSet)
     geneModel <- .validateGRangesList(geneModel)
     stopifnot("targetGene must be a character vector or NULL" = {
         is.vector(targetGene, mode="character") || is.null(targetGene)
     })
-    stopifnot("guideStacking must be NA or one of 'squish', 'dense', or 'hide'" = {
+    stopifnot("guideStacking must be NA or one of 'squish', 'dense', 'hide', or 'none'" = {
         length(guideStacking) == 1 &&
             (
                 is.na(guideStacking) ||
-                    guideStacking %in% c("squish", "dense", "hide")
+                    guideStacking %in% c("squish", "dense", "hide", "none")
             )
     })
     stopifnot("pamSiteOnly must be TRUE or FALSE" = {
@@ -88,6 +87,7 @@ plotGuideSet <- function(guideSet,
     
     ## set tracks
     ideogramTrack <- .getIdeogramTrack(
+        includeIdeogram=includeIdeogram,
         chr=chr,
         genome=unique(GenomeInfoDb::genome(guideSet)),
         bands=bands
@@ -106,7 +106,9 @@ plotGuideSet <- function(guideSet,
     plotWindowMin <- min(unlist(plotWindowMin))
     plotWindowMax <- lapply(guideTrack, max)
     plotWindowMax <- max(unlist(plotWindowMax))
-    plotWindowSize <- plotWindowMax - plotWindowMin
+    minimumWindowMargin <- 20
+    plotWindowSize <- max(plotWindowMax - plotWindowMin,
+                          minimumWindowMargin)
     if (is.null(from)){
         from <- plotWindowMin - plotWindowSize
     }
@@ -114,7 +116,6 @@ plotGuideSet <- function(guideSet,
         to <- plotWindowMax + plotWindowSize
     }
     ## have geneTrack adjust to plot window
-    
     geneTrack <- .getGeneTrack(geneModel=geneModel,
                                targetGene=targetGene,
                                from=from - extend.left,
@@ -182,11 +183,12 @@ plotGuideSet <- function(guideSet,
 
 
 #' @importFrom Gviz IdeogramTrack
-.getIdeogramTrack <- function(chr,
+.getIdeogramTrack <- function(includeIdeogram,
+                              chr,
                               genome,
                               bands
 ){
-    if (is.null(genome) && is.null(bands)){
+    if (!includeIdeogram || (is.null(genome) && is.null(bands))){
         return(NULL)
     } else {
         Gviz::IdeogramTrack(
@@ -214,50 +216,6 @@ plotGuideSet <- function(guideSet,
 
 
 
-
-
-
-## part of txTracks
-# .getPromoterTrack <- function(tssModel,
-#                               targetGene
-#                               
-# ){
-#     tss <- crisprDesign::queryTss(
-#         tssObject=tssModel,
-#         queryColumn="gene_symbol",
-#         queryValue=targetGene
-#     )
-#     if (length(tss) == 0){
-#         return(NULL)
-#     }
-#     
-#     promoterTrack <- lapply(seq_along(tss), function(x){
-#         id <- S4Vectors::mcols(tss)[["ID"]][x]
-#         strand <- as.character(BiocGenerics::strand(tss)[x])
-#         directionalId <- ifelse(strand == "+",
-#                                 paste(id, "->"),
-#                                 paste("<-", id))
-#         Gviz::AnnotationTrack(
-#             start=BiocGenerics::start(tss)[x],
-#             end=BiocGenerics::end(tss)[x],
-#             chromosome=GenomeInfoDb::seqnames(tss)[x],
-#             strand=strand,
-#             id=directionalId,
-#             name=id,
-#             group=directionalId,
-#             showID=TRUE,
-#             stacking="full",
-#             collapse=FALSE,
-#             col="purple",
-#             fill="orchid",
-#             shape="box",
-#             fontcolor.group="black",
-#             fontsize.group=18,
-#             cex.title=0.8
-#         )
-#     })
-#     return(promoterTrack)
-# }
 
 
 
@@ -298,7 +256,7 @@ plotGuideSet <- function(guideSet,
                                     BiocGenerics::end(transcripts) > from]
     txRight <- transcripts$tx_id[BiocGenerics::end(transcripts) > to &
                                      BiocGenerics::start(transcripts) < to]
-    extendDistance <- to - from
+    extendDistance <- 0.1 * (to - from)
     transcripts <- IRanges::restrict(transcripts,
                                      start=from,
                                      end=to)
@@ -317,7 +275,9 @@ plotGuideSet <- function(guideSet,
     exonLeft <- lapply(txLeft, function(x){
         strand <- unique(BiocGenerics::strand(splicings))
         currentRanks <- splicings$exon_rank[splicings$tx_id == x]
-        if (strand == "+"){
+        if (length(currentRanks) == 0){
+            exon_rank <- ifelse(strand == "+", 1, 2)
+        } else if (strand == "+"){
             exon_rank <- min(currentRanks) - 1
         } else {
             exon_rank <- max(currentRanks) + 1
@@ -347,7 +307,9 @@ plotGuideSet <- function(guideSet,
     exonRight <- lapply(txRight, function(x){
         strand <- unique(BiocGenerics::strand(splicings))
         currentRanks <- splicings$exon_rank[splicings$tx_id == x]
-        if (strand == "+"){
+        if (length(currentRanks) == 0){
+            exon_rank <- ifelse(strand == "+", 2, 1)
+        } else if (strand == "+"){
             exon_rank <- max(currentRanks) + 1
         } else {
             exon_rank <- min(currentRanks) - 1
@@ -378,8 +340,14 @@ plotGuideSet <- function(guideSet,
     
     ## adjust start/end of cds and exons
     for (i in seq_along(splicings)){
+        tx_id <- splicings$tx_id[i]
+        tx_index <- transcripts$tx_id == tx_id
         splicings$cds_start[i] <- max(BiocGenerics::start(splicings[i]), splicings$cds_start[i])
+        splicings$cds_start[i] <- min(splicings$cds_start[i],
+                                      BiocGenerics::end(transcripts[tx_index]))
         splicings$cds_end[i] <- min(BiocGenerics::end(splicings[i]), splicings$cds_end[i])
+        splicings$cds_end[i] <- max(splicings$cds_end[i],
+                                      BiocGenerics::start(transcripts[tx_index]))
     }
     
     chrominfo <- GenomeInfoDb::seqinfo(geneModel[["transcripts"]])
@@ -531,6 +499,9 @@ plotGuideSet <- function(guideSet,
                            showGuideLabels,
                            onTargetScore
 ){
+    # if (guideStacking == "none"){
+    #     return()
+    # }
     if (pamSiteOnly){
         guideRanges <- guideSet
         if (is.na(guideStacking)){
@@ -551,8 +522,9 @@ plotGuideSet <- function(guideSet,
         name <- "gRNAs"
     }
     
-    colors <- .getScoreColor(
+    colors <- .getScoreColors(
         guideSet=guideSet,
+        names=names,
         onTargetScore=onTargetScore
     )
     
@@ -568,11 +540,18 @@ plotGuideSet <- function(guideSet,
             symbol=names,
             showID=TRUE,
             geneSymbol=TRUE,
-            fill=colors,
             stacking=guideStacking,
             fontcolor.group="black",
             col.line="black"
         )
+        if (methods::is(x, "GuideSet")){
+            Gviz::group(track) <- names
+        }
+        groups <- Gviz::group(track)
+        Gviz::displayPars(track)[["fill"]] <- colors[groups]
+        if (!methods::is(x, "TxDb")){
+            Gviz::transcript(track) <- names
+        }
         if (showGuideLabels){
             Gviz::displayPars(track) <- list(transcriptAnnotation="transcript")
             track <- .addStrandToLabel(
@@ -727,10 +706,11 @@ plotGuideSet <- function(guideSet,
 
 #' @importFrom S4Vectors mcols
 #' @importFrom grDevices colorRampPalette
-.getScoreColor <- function(guideSet,
-                           onTargetScore,
-                           score0="#D2D2D2",
-                           score1="#000080"
+.getScoreColors <- function(guideSet,
+                            names,
+                            onTargetScore,
+                            score0="#D2D2D2",
+                            score1="#000080"
 ){
     onTargetScore <- .validateOnTargetScore(
         onTargetScore,
@@ -744,5 +724,7 @@ plotGuideSet <- function(guideSet,
     colors <- colorFunction(100)
     intervals <- cut(scores, breaks=seq(0, 1, by=0.01))
     intervals <- as.numeric(intervals)
-    return(colors[intervals])
+    scoreColors <- colors[intervals]
+    names(scoreColors) <- names(guideSet)
+    return(scoreColors)
 }

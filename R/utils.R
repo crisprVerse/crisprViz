@@ -53,6 +53,24 @@
 
 
 
+#' @importFrom GenomeInfoDb seqnames
+.validateSingleChrList <- function(obj
+){
+    eMessage <- "All GuideSets must target the same chromosome."
+    if (!is.list(obj)){
+        stop(eMessage)
+    }
+    chrs <- vapply(obj, function(x){
+        chr <- GenomeInfoDb::seqnames(x)
+        as.character(unique(chr))
+    }, FUN.VALUE=character(1))
+    chr <- unique(chrs)
+    if (length(chr) != 1){
+        stop(eMessage)
+    }
+    return(chr)
+}
+
 
 
 

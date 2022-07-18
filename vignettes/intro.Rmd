@@ -1,0 +1,180 @@
+---
+title: "Introduction to crisprViz"
+author: 
+- name: Luke Hoberecht
+  affiliation: Department of Data Science and Statistical Computing, gRED, Genentech
+  email: hoberecl@gene.com
+date: "`r Sys.Date()`"
+output: 
+  BiocStyle::html_document:
+    toc_float: true
+    #theme: paper
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Introduction to crisprViz}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+
+
+# Introduction
+
+The `crisprViz` package enables the graphical interpretation of `GuideSet`
+objects from the `crisprDesign` package by plotting guide RNA (gRNA) cutting
+locations against their target gene or other genomic region. These genomic
+plots are constructed using the `Gviz` package from Bioconductor.
+
+This vignette walks through several use cases that demonstrate the range of and
+how to use plotting functions in the `crisprViz` package. This vignette also
+makes heavy use of the `crisprDesign` package to manipulate `GuideSet` objects
+in conjunction with plotting in the process of gRNA design. For more information
+about the `crisprDesign` package see [vignettes].
+
+
+# Installation
+
+`crisprViz` can be installed from Bioconductor using the following
+commands in an R session:
+
+```{r, eval=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("crisprViz")
+```
+
+# Use cases
+
+## Visualizing the best gRNAs for a given gene
+
+Suppose we want to design the four best gRNAs using the SpCas9 CRISPR nuclease
+to knockout the human KRAS gene. We will prioritize gRNAs that have greater
+isoform coverage and target isoforms closer to the 5' end of their respective
+CDS.
+
+Once we create our `GuideSet` we can visualize where in KRAS our gRNAs target.
+
+```{r, message=FALSE, warning=FALSE}
+library(crisprDesign)
+library(crisprDesignData)
+data(txdb_human)
+library(BSgenome.Hsapiens.UCSC.hg38)
+# library(crisprViz)
+```
+
+``` {r}
+kras <- queryTxObject(txdb_human,
+                      featureType="cds",
+                      queryColumn="gene_symbol",
+                      queryValue="KRAS")
+gs <- findSpacers(kras,
+                  crisprNuclease=SpCas9,
+                  bsgenome=BSgenome.Hsapiens.UCSC.hg38)
+gs <- unique(gs)
+length(gs) # number of candidate gRNAs
+```
+
+Let's first generate a simple plot of a few gRNAs to see what plot looks like:
+
+```{r}
+# plotGuideSet(gs[1:4],
+#              geneModel=txdb_human,
+#              "KRAS")
+```
+
+We see our gRNAs target the 3' end of the KRAS gene, and that the 5' end of the
+gene is cropped out:
+    - the plot window by default is set by our GuideSet
+    - we can manaully adjust this window by using the `from`, `to`, `extend.left`,
+    and `extend.right` arguments, which we show later
+    - while the plot window is large relative to the spacer length, we know
+    which strand each gRNA targets by looking at the label (`<-` vs `->`)
+
+Plotting all `r length(gs)` gRNAs in the `GuideSet` will crowd the plot space,
+making it difficult to interpret. To alleviate this we can hide the gRNA labels
+by setting the `showGuideLabels` argument to `FALSE`:
+
+``` {r}
+# plotGuideSet(gs,
+#              geneModel=txdb_human,
+#              targetGene="KRAS",
+#              showGuideLabels=FALSE)
+```
+
+The plot shows five distinct clusters of gRNA target locations that make up the
+CDS of the KRAS gene. The exon targeted by the 5'-most cluster of gRNAs
+contains the only coding segment of the gene expressed by all isoforms, making
+it an ideal target for our scenario.
+
+We can see which gRNAs target this region by returning `showGuideLabels` to
+its default value of `TRUE`, and by adjusting the plot window with the `from`
+and `to` arguments. To include some surrounding context and prevent loss of
+information through cropping, we'll extend the margins of our plot window with
+`extend.left` and `extend.right`.
+
+```{r}
+exon_ranks <- mcols(kras)$exon_rank
+min_exon_rank <- min(exon_ranks)
+targetRegion <- kras[exon_ranks == min_exon_rank]
+from <- min(start(targetRegion))
+to <- max(end(targetRegion))
+# plotGuideSet(gs,
+#              geneModel=txdb_human,
+#              targetGene="KRAS",
+#              from=from,
+#              to=to,
+#              extend.left=50,
+#              extend.right=50)
+```
+
+Let's filter our `GuideSet` by the gRNA names in the plot. [then add on-target
+scores and generate the same plot with the gRNAs colored by score]. [no need to
+set from/to/extend.left/extend.right arguments, as the plot window automatically
+adjusts to fit our GuideSet].
+
+```{r}
+goodGuides <- c(80, 84, 88, 92, 96, 100, 104, 108, 112)
+goodGuides <- paste0("spacer_", goodGuides)
+gs <- gs[goodGuides]
+
+# gs <- addOnTargetScores(gs,
+#                         methods="deephf")
+# plotGuideSet(gs,
+#              geneModel=txdb_human,
+#              targetGene="KRAS",
+#              onTargetScore="score_deephf")
+
+```
+
+[any further steps?].
+
+
+
+
+
+
+
+
+
+## Use case #2:
+
+# Very zoomed in region (100 nucleotides) where guides are shown at a very
+# granular level with thickness differentiating between spacer and PAM sequence, and sequence track
+# This allows user to know exactly where the guides cut.
+
+
+
+
+
+
+
+
+
+
+# Tiling example: lots of guides piling up in a specific region (with a without
+# labels option). Multiple nucleases.
+# Optional additional tracks (chromatin accessibility, etc.). Include repeat elements.
+
+
+
