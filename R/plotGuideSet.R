@@ -152,7 +152,6 @@ plotGuideSet <- function(x,
             bsgenome=bsgenome
         )
     }
-    
     Gviz::plotTracks(
         tracks,
         chromosome=chr,

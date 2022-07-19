@@ -46,22 +46,26 @@ BiocManager::install("crisprViz")
 
 # Use cases
 
+All examples in this vignette will use human genome assembly `hg38` from the
+`BSgenome.Hsapiens.UCSC.hg38` package and gene model coordinates from Ensembl
+release 104 via the `crisprDesignData` package.
+
+```{r, message=FALSE, warning=FALSE}
+library(BSgenome.Hsapiens.UCSC.hg38)
+library(crisprDesign)
+library(crisprDesignData)
+data(txdb_human, package="crisprDesignData")
+library(crisprViz)
+```
+
 ## Visualizing the best gRNAs for a given gene
 
 Suppose we want to design the four best gRNAs using the SpCas9 CRISPR nuclease
-to knockout the human KRAS gene. We will prioritize gRNAs that have greater
-isoform coverage and target isoforms closer to the 5' end of their respective
-CDS.
+to knockout the human KRAS gene. To have the greatest impact on gene function
+we want to prioritize gRNAs that have greater isoform coverage and target
+closer to the 5' end of the CDS.
 
-Once we create our `GuideSet` we can visualize where in KRAS our gRNAs target.
-
-```{r, message=FALSE, warning=FALSE}
-library(crisprDesign)
-library(crisprDesignData)
-data(txdb_human)
-library(BSgenome.Hsapiens.UCSC.hg38)
-# library(crisprViz)
-```
+We will start by finding all possible gRNAs that target the CDS of KRAS.
 
 ``` {r}
 kras <- queryTxObject(txdb_human,
@@ -75,37 +79,69 @@ gs <- unique(gs)
 length(gs) # number of candidate gRNAs
 ```
 
-Let's first generate a simple plot of a few gRNAs to see what plot looks like:
+Before we plot all of our candidate gRNAs, let's first generate a simple plot
+with a few gRNAs to familiarize ourselves with some plot components and options.
 
 ```{r}
-# plotGuideSet(gs[1:4],
-#              geneModel=txdb_human,
-#              "KRAS")
+plotGuideSet(gs[1:4],
+             geneModel=txdb_human,
+             targetGene="KRAS")
 ```
+There are a few things to note here.
 
-We see our gRNAs target the 3' end of the KRAS gene, and that the 5' end of the
-gene is cropped out:
-    - the plot window by default is set by our GuideSet
-    - we can manaully adjust this window by using the `from`, `to`, `extend.left`,
-    and `extend.right` arguments, which we show later
-    - while the plot window is large relative to the spacer length, we know
-    which strand each gRNA targets by looking at the label (`<-` vs `->`)
-
-Plotting all `r length(gs)` gRNAs in the `GuideSet` will crowd the plot space,
+ * The ideogram track and genome axis track are at the top of our plot and give
+ us coordinate information.
+ * Our `targetGene` KRAS is plotted next, using coordinates from the provided
+ `geneModel`, followed by our spacer subset. The name of each track is given
+ on the left.
+ * The strand information for each track is included in the label: `<-` for
+ reverse strand and `->` for forward strand.
+ * While we can identify which exon each spacer targets (which may be
+ sufficient), the plot window is too large to provide further information.
+ * The plot only shows the 3' end of KRAS, rather than the entire gene.
+ 
+This last point is important: the default plot window is set by the spacers'
+ranges in the input `GuideSet` object. We can manually adjust this window by
+using the `from`, `to`, `extend.left`, and `extend.right` arguments. Here is
+the same plot adjusted to show the whole KRAS gene, which also reveals an
+additional isoform that is not targeted by any spacer in this example subset.
+ 
+```{r}
+kras_tx <- queryTxObject(txdb_human,
+                         featureType="transcripts",
+                         queryColumn="gene_symbol",
+                         queryValue="KRAS")
+from <- min(start(kras_tx))
+to <- max(end(kras_tx))
+plotGuideSet(gs[1:4],
+             geneModel=txdb_human,
+             targetGene="KRAS",
+             from=from,
+             to=to,
+             extend.left=1000,
+             extend.right=1000)
+```
+ 
+As calculated above, there are a total of `{r} length(gs)` candidate gRNAs
+targeting the CDS of KRAS. Including all of them could crowd the plot space,
 making it difficult to interpret. To alleviate this we can hide the gRNA labels
-by setting the `showGuideLabels` argument to `FALSE`:
+by setting the `showGuideLabels` argument to `FALSE`.
 
-``` {r}
-# plotGuideSet(gs,
-#              geneModel=txdb_human,
-#              targetGene="KRAS",
-#              showGuideLabels=FALSE)
+``` {r fig.height=10}
+plotGuideSet(gs,
+             geneModel=txdb_human,
+             targetGene="KRAS",
+             from=from,
+             to=to,
+             extend.left=1000,
+             extend.right=1000)
 ```
 
-The plot shows five distinct clusters of gRNA target locations that make up the
-CDS of the KRAS gene. The exon targeted by the 5'-most cluster of gRNAs
-contains the only coding segment of the gene expressed by all isoforms, making
-it an ideal target for our scenario.
+Again, the plot window is too large to discern details for each spacer.
+However, we can clearly see five distinct clusters of spacer target locations
+that make up the CDS of the KRAS gene. The spacers in the 5'-most cluster (on
+the reverse strand) target the only coding region of the gene that is expressed
+by all isoforms, making it an ideal target for our scenario.
 
 We can see which gRNAs target this region by returning `showGuideLabels` to
 its default value of `TRUE`, and by adjusting the plot window with the `from`
@@ -114,18 +150,19 @@ information through cropping, we'll extend the margins of our plot window with
 `extend.left` and `extend.right`.
 
 ```{r}
-exon_ranks <- mcols(kras)$exon_rank
-min_exon_rank <- min(exon_ranks)
-targetRegion <- kras[exon_ranks == min_exon_rank]
-from <- min(start(targetRegion))
-to <- max(end(targetRegion))
+# exon_ranks <- mcols(kras)$exon_rank
+# min_exon_rank <- min(exon_ranks)
+# targetRegion <- kras[exon_ranks == min_exon_rank]
+# from <- min(start(targetRegion))
+# to <- max(end(targetRegion))
 # plotGuideSet(gs,
 #              geneModel=txdb_human,
 #              targetGene="KRAS",
+#              # showGuideLabels=FALSE,
 #              from=from,
 #              to=to,
-#              extend.left=50,
-#              extend.right=50)
+#              extend.left=1000,
+#              extend.right=1000)
 ```
 
 Let's filter our `GuideSet` by the gRNA names in the plot. [then add on-target
@@ -134,10 +171,10 @@ set from/to/extend.left/extend.right arguments, as the plot window automatically
 adjusts to fit our GuideSet].
 
 ```{r}
-goodGuides <- c(80, 84, 88, 92, 96, 100, 104, 108, 112)
-goodGuides <- paste0("spacer_", goodGuides)
-gs <- gs[goodGuides]
-
+# goodGuides <- c(80, 84, 88, 92, 96, 100, 104, 108, 112)
+# goodGuides <- paste0("spacer_", goodGuides)
+# gs <- gs[goodGuides]
+# 
 # gs <- addOnTargetScores(gs,
 #                         methods="deephf")
 # plotGuideSet(gs,
@@ -159,9 +196,9 @@ gs <- gs[goodGuides]
 
 ## Use case #2:
 
-# Very zoomed in region (100 nucleotides) where guides are shown at a very
-# granular level with thickness differentiating between spacer and PAM sequence, and sequence track
-# This allows user to know exactly where the guides cut.
+...Very zoomed in region (100 nucleotides) where guides are shown at a very
+granular level with thickness differentiating between spacer and PAM sequence, and sequence track
+This allows user to know exactly where the guides cut.
 
 
 
@@ -171,10 +208,32 @@ gs <- gs[goodGuides]
 
 
 
+## Use case #3:
 
-# Tiling example: lots of guides piling up in a specific region (with a without
-# labels option). Multiple nucleases.
-# Optional additional tracks (chromatin accessibility, etc.). Include repeat elements.
+...Tiling example: lots of guides piling up in a specific region (with a without
+labels option). Multiple nucleases.
+Optional additional tracks (chromatin accessibility, etc.).
+Use queryTss() with window of 2000bp
+Include repeat elements (Alu elements...), H3K27 track..., GC content track
+
+Don't need to put all tracks on single plot, but is there reason to separate...?
 
 
 
+
+
+
+
+# Setting plot size
+
+Plots with many gene isoforms and/or gRNAs may require more space to render
+than is allotted by your graphical device's default settings, resulting in an
+error. One solution, depending on your graphical device, is offered by the
+[**grDevices** package](https://www.rdocumentation.org/packages/grDevices/versions/3.6.2/topics/Devices).
+
+Here is an example using macOS Quartz device.
+
+```{r, eval=FALSE}
+grDevices::quartz("Example plot", width=6, height=7)
+# plot function
+```
