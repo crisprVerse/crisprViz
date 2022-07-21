@@ -208,30 +208,89 @@ plotGuideSet(be[1:4],
 
 ## Use case #3:
 
-CRISPRa, target TP53
+CRISPRa, target MMP7
 
+-> start describing scenario
+-> mention how can add annotation tracks
+-> one track of interest is repeats, which we want to avoid as they can lead to many off-targets
+-> will add repeats annotation
 
 
 ```{r}
-data(tss_human, package="crisprDesignData")
-promoter <- queryTss(tss_human,
-                     queryColumn="gene_symbol",
-                     queryValue="TP53",
-                     tss_window=c(-2000, 0))
+data("tss_human", package="crisprDesignData")
+data("gr.repeats.hg38", package="crisprDesignData")
+mmp7 <- queryTss(tss_human,
+                 queryColumn="gene_symbol",
+                 queryValue="MMP7",
+                 tss_window=c(-2000, 0))
+gs <- findSpacers(mmp7,
+                  crisprNuclease=SpCas9,
+                  bsgenome=BSgenome.Hsapiens.UCSC.hg38)
+plotGuideSet(gs,
+             geneModel=txdb_human,
+             targetGene="MMP7",
+             guideStacking="dense",
+             annotations=list(Repeats=gr.repeats.hg38),
+             pamSiteOnly=TRUE,
+             from=start(mmp7),
+             to=end(mmp7),
+             extend.left=600,
+             extend.right=100)
 ```
 
+-> Repeats overlaps some gRNAs in our target region. Let's remove them with removeRepeats()
+-> regenerate plot to see they were removed
 
-...Tiling example: lots of guides piling up in a specific region (with a without
-labels option). Multiple nucleases.
-Optional additional tracks (chromatin accessibility, etc.).
-Use queryTss() with window of 2000bp
-Include repeat elements (Alu elements...), H3K27 track..., GC content track
+```{r}
+gs <- removeRepeats(gs,
+                    gr.repeats=gr.repeats.hg38)
+plotGuideSet(gs,
+             geneModel=txdb_human,
+             targetGene="MMP7",
+             guideStacking="dense",
+             annotations=list(Repeats=gr.repeats.hg38),
+             pamSiteOnly=TRUE,
+             from=start(mmp7),
+             to=end(mmp7),
+             extend.left=600,
+             extend.right=100)
+```
 
-Don't need to put all tracks on single plot, but is there reason to separate...?
+-> We can do the same with another type of genomic annotation we wish to avoid: SNPs. However, rather than adding SNPs as a separate annotation, we can incorporate SNPs into our `GuideSet` with addSNPAnntation(), and plot a SNPs track with `includeSNPTrack=TRUE`, which is the default value. Note that since SNPs are obtained from the GuideSet, only SNPs that overlap with gRNAs in the GuideSet will be plotted. addSNPAnnotation() also appends a logical `hasSNP` column which we could use to filter out guides overlaping SNPs.
 
-FEATURES: annotations, includeSNPTrack, guideStacking, multiple guidesets...
+-> Some annotations we are interested in are CAGE peaks and DNase (briefly, why), let's retrieve those annotations from AnnotationHub and plot them alongside our Guides
 
-[begin with one (fully set up), then lead into plotting another for comparison]
+```{r}
+library(AnnotationHub)
+ah <- AnnotationHub()
+
+cage <- ah[["AH5084"]]
+dnase <- ah[['AH30743']]
+
+## lift over from hg19
+chain <- ah[["AH14150"]]
+cage <- rtracklayer::liftOver(cage, chain)
+cage <- unlist(cage)
+dnase <- rtracklayer::liftOver(dnase, chain)
+dnase <- unlist(dnase)
+
+## h3k27 track?
+# gc-content: data track - need to create
+
+plotGuideSet(gs,
+             geneModel=txdb_human,
+             targetGene="MMP7",
+             guideStacking="dense",
+             annotations=list(CAGE=cage, DNase=dnase),
+             pamSiteOnly=TRUE,
+             from=start(mmp7),
+             to=end(mmp7),
+             extend.left=600,
+             extend.right=100)
+```
+
+-> we can zoom in on annotated regions, as this is a more desirable target location, and add on-target scores
+-> we have fewer choices in this range for SpCas9, let's add another GuideSet for AsCas12a to compare the number and quality of hits; (we can also add a dataTrack for GC content...)
 
 
 
