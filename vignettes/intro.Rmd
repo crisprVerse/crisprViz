@@ -102,7 +102,7 @@ plotGuideSet(gs[1:4],
              extend.right=1000)
 ```
  
-As calculated above, there are a total of `{r} length(gs)` candidate gRNAs targeting the CDS of KRAS. Including all of them could crowd the plot space, making it difficult to interpret. To alleviate this we can hide the gRNA labels by setting the `showGuideLabels` argument to `FALSE`.
+As calculated above, there are a total of `r length(gs)` candidate gRNAs targeting the CDS of KRAS. Including all of them could crowd the plot space, making it difficult to interpret. To alleviate this we can hide the gRNA labels by setting the `showGuideLabels` argument to `FALSE`.
 
 ``` {r fig.height=10}
 plotGuideSet(gs,
@@ -206,15 +206,11 @@ plotGuideSet(be[1:4],
 ```
 
 
-## Use case #3:
+## CRISPRa and adding genomic annotations
 
-CRISPRa, target MMP7
+In this scenario we want to express the human MMP7 gene via CRISPR activation (CRISPRa). We will use the SpCas9 CRISPR nuclease and obtain TSS coordinates from the `crisprDesignData` package and begin our search for candidate gRNAs in the 2kb window immediately upstream of the TSS. To aid in the selection process, we will include additional genomic annotation tracks which identify either desirable or undesirable targets in our region of interest.
 
--> start describing scenario
--> mention how can add annotation tracks
--> one track of interest is repeats, which we want to avoid as they can lead to many off-targets
--> will add repeats annotation
-
+Let's begin by constructing and plotting our `GuideSet`, and adding a track of repeat elements using the `annotations` argument.
 
 ```{r}
 data("tss_human", package="crisprDesignData")
@@ -238,8 +234,7 @@ plotGuideSet(gs,
              extend.right=100)
 ```
 
--> Repeats overlaps some gRNAs in our target region. Let's remove them with removeRepeats()
--> regenerate plot to see they were removed
+Some of our candidate gRNAs target repeat elements, and likely have many off-targets as a result. Let's remove these gRNAs and regenerate the plot.
 
 ```{r}
 gs <- removeRepeats(gs,
@@ -256,26 +251,22 @@ plotGuideSet(gs,
              extend.right=100)
 ```
 
--> We can do the same with another type of genomic annotation we wish to avoid: SNPs. However, rather than adding SNPs as a separate annotation, we can incorporate SNPs into our `GuideSet` with addSNPAnntation(), and plot a SNPs track with `includeSNPTrack=TRUE`, which is the default value. Note that since SNPs are obtained from the GuideSet, only SNPs that overlap with gRNAs in the GuideSet will be plotted. addSNPAnnotation() also appends a logical `hasSNP` column which we could use to filter out guides overlaping SNPs.
+We can similarly filter out gRNAs that overlap SNPs. However, rather than adding SNPs as a separate annotation, we can incorporate SNPs into our `GuideSet` with `addSNPAnntation()` and plot the SNPs track by having `includeSNPTrack` as `TRUE`. Note that since SNPs are obtained from the `GuideSet`, only SNPs that overlap with gRNAs in the `GuideSet` will be plotted. The `addSNPAnnotation()` function also appends a logical `hasSNP` column, which we could use to select gRNAs that do not overlap SNPs.
 
--> Some annotations we are interested in are CAGE peaks and DNase (briefly, why), let's retrieve those annotations from AnnotationHub and plot them alongside our Guides
+Conversely, there are specific genomic regions that would be beneficial to target, such as CAGE peaks and DNase I Hypersensitivity tracks (briefly, why). Let's retrieve those annotations from the Bioconductor package `AnnotationHub` and plot them alongside our gRNAs.
 
 ```{r}
 library(AnnotationHub)
 ah <- AnnotationHub()
 
-cage <- ah[["AH5084"]]
-dnase <- ah[['AH30743']]
-
-## lift over from hg19
+## lift over annotation tracks from hg19
 chain <- ah[["AH14150"]]
+cage <- ah[["AH5084"]]
 cage <- rtracklayer::liftOver(cage, chain)
 cage <- unlist(cage)
+dnase <- ah[['AH30743']]
 dnase <- rtracklayer::liftOver(dnase, chain)
 dnase <- unlist(dnase)
-
-## h3k27 track?
-# gc-content: data track - need to create
 
 plotGuideSet(gs,
              geneModel=txdb_human,
@@ -289,8 +280,51 @@ plotGuideSet(gs,
              extend.right=100)
 ```
 
--> we can zoom in on annotated regions, as this is a more desirable target location, and add on-target scores
--> we have fewer choices in this range for SpCas9, let's add another GuideSet for AsCas12a to compare the number and quality of hits; (we can also add a dataTrack for GC content...)
+Let's filter our `GuideSet` for guides overlapping the plotted DNase site then regenerate the plot.
+
+```{r}
+# filter GuideSet for gRNAs overlapping DNase track
+overlaps <- findOverlaps(gs, dnase, ignore.strand=TRUE)
+gs <- gs[queryHits(overlaps)]
+
+plotGuideSet(gs,
+             geneModel=txdb_human,
+             targetGene="MMP7",
+             guideStacking="dense",
+             annotations=list(CAGE=cage, DNase=dnase),
+             pamSiteOnly=TRUE,
+             margin=0.4)
+```
+
+## Comparing multiple GuideSets targeting the same region
+
+Choice of CRISPR nuclease can be influenced by the abundance of qualify PAM sequences in the target region. For example, we would expect AT-rich regions to have fewer possible targets for the SpCas9 nuclease, whose PAM is NGG. In these regions, the CRISPR nuclease AsCas12a, whose PAM is TTTV, may prove more appropriate. Given multiple `GuideSet`s targeting the same region, we can compare the gRNAs of each in the same plot using `plotMultipleGuideSets`.
+
+Here, we pass our `GuideSet`s targeting an exon in the human gene LTN1 in a named list. Note that there are no available options for displaying guide labels or guide stacking, and only the PAM sites are plotted. We will also add a track to monitor the percent GC content (using a window roughly the length of our protospacers). Not surprisingly, this AT-rich region has fewer targets for SpCas9 compared to AsCas12a.
+
+```{r}
+target <- queryTxObject(txdb_human,
+                        featureType="cds",
+                        queryColumn="exon_id",
+                        queryValue="ENSE00001705186")
+## SpCas9
+gs_cas9 <- findSpacers(target,
+                       crisprNuclease=SpCas9,
+                       bsgenome=BSgenome.Hsapiens.UCSC.hg38)
+gs_cas9 <- unique(gs_cas9)
+## AsCas12a
+gs_cas12a <- findSpacers(target,
+                         crisprNuclease=AsCas12a,
+                         bsgenome=BSgenome.Hsapiens.UCSC.hg38)
+gs_cas12a <- unique(gs_cas12a)
+## plot GuideSets
+plotMultipleGuideSets(list(SpCas9=gs_cas9, AsCas12a=gs_cas12a),
+                      geneModel=txdb_human,
+                      targetGene="LTN1",
+                      bsgenome=BSgenome.Hsapiens.UCSC.hg38,
+                      margin=0.2,
+                      gcWindow=10)
+```
 
 
 

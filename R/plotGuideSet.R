@@ -13,6 +13,7 @@
 #' @param annotations  named list of annotations to plot (GRanges)
 #' @param from,to  see ?plotTracks
 #' @param extend.left,extend.right  see ?plotTracks
+#' @param margin tbd (works only if either from/to are NULL)
 #' @param includeIdeogram boolean
 #' @param bands see ?IdeogramTrack
 #' @param guideStacking  how to stack all guides on a single track (squish, dense, or hide) or NA to have each guide occupy a separate track
@@ -21,6 +22,7 @@
 #' @param showGuideLabels tbd
 #' @param onTargetScore  color coding guides...need to add legend
 #' @param includeSNPTrack tbd
+#' @param gcWindow tbd
 #' 
 #' @return A Gviz plot... see ?Gviz::plotTracks
 #' 
@@ -60,6 +62,7 @@ plotGuideSet <- function(x,
                          to=NULL,
                          extend.left=0,
                          extend.right=0,
+                         margin=1,
                          includeIdeogram=TRUE,
                          bands=NULL,
                          guideStacking="squish",
@@ -67,7 +70,8 @@ plotGuideSet <- function(x,
                          pamSiteOnly=FALSE,
                          showGuideLabels=TRUE,
                          onTargetScore=NULL,
-                         includeSNPTrack=TRUE
+                         includeSNPTrack=TRUE,
+                         gcWindow=NULL
 ){
     ## check inputs
     guideSet <- .validateGuideSet(x)
@@ -85,6 +89,11 @@ plotGuideSet <- function(x,
     })
     stopifnot("pamSiteOnly must be TRUE or FALSE" = {
         S4Vectors::isTRUEorFALSE(pamSiteOnly)
+    })
+    stopifnot("margin must be a non-negative numeric value" = {
+        is.vector(margin, mode="numeric") &&
+            length(margin) == 1 &&
+            margin >= 0
     })
     
     ## set tracks
@@ -112,10 +121,10 @@ plotGuideSet <- function(x,
     plotWindowSize <- max(plotWindowMax - plotWindowMin,
                           minimumWindowMargin)
     if (is.null(from)){
-        from <- plotWindowMin - plotWindowSize
+        from <- plotWindowMin - margin * plotWindowSize
     }
     if (is.null(to)){
-        to <- plotWindowMax + plotWindowSize
+        to <- plotWindowMax + margin * plotWindowSize
     }
     ## have geneTrack adjust to plot window
     geneTrack <- .getGeneTrack(geneModel=geneModel,
@@ -139,9 +148,26 @@ plotGuideSet <- function(x,
     } else {
         snpTrack <- list()
     }
+    
+    if (!is.null(gcWindow)){
+        stopifnot("gcWindow must be a positive integer" = {
+            is.vector(gcWindow, "numeric") &&
+                length(gcWindow) == 1 &&
+                gcWindow == round(gcWindow)
+        })
+        gcTrack <- .getGcTrack(
+            bsgenome=bsgenome,
+            chr=chr,
+            from=from - extend.left,
+            to=to + extend.right,
+            gcWindow=gcWindow
+        )
+    } else {
+        gcTrack <- NULL
+    }
         
     
-    tracks <- c(list(ideogramTrack, genomeAxisTrack), geneTrack, annotationTrack, snpTrack, guideTrack)
+    tracks <- c(list(ideogramTrack, genomeAxisTrack), geneTrack, annotationTrack, snpTrack, gcTrack, guideTrack)
     tracks <- tracks[vapply(tracks, function(x){
         !is.null(x)
     }, FUN.VALUE=logical(1))]
@@ -482,6 +508,52 @@ plotGuideSet <- function(x,
 
 
 
+#' @importFrom methods is
+#' @importFrom BSgenome getSeq
+#' @importFrom Biostrings letterFrequency
+#' @importClassesFrom GenomicRanges GRanges
+#' @importClassesFrom IRanges IRanges
+#' @importFrom Gviz DataTrack
+.getGcTrack <- function(bsgenome,
+                        chr,
+                        from,
+                        to,
+                        gcWindow
+){
+    stopifnot("bsgenome must be a BSgenome object." = {
+        methods::is(bsgenome, "BSgenome")
+    })
+    
+    plotSeq <- BSgenome::getSeq(
+        bsgenome,
+        names=chr,
+        start=from - gcWindow,
+        end=to + gcWindow
+    )
+    
+    centers <- seq(gcWindow + 1, length(plotSeq) - gcWindow)
+    gcValues <- vapply(centers, function(x){
+        window <- seq(x - gcWindow, x + gcWindow)
+        windowSeq <- plotSeq[window]
+        gcCount <- Biostrings::letterFrequency(windowSeq, letters="GC")
+        round(100 * gcCount / (2*gcWindow+1), 1)
+    }, FUN.VALUE=numeric(1))
+    
+    gcRanges <- GenomicRanges::GRanges(
+        seqnames=chr,
+        ranges=IRanges::IRanges(start=seq(from, to), width=1),
+        gcValues=gcValues
+    )
+    
+    gcTrack <- Gviz::DataTrack(gcRanges, name="% GC", type="l")
+    return(gcTrack)
+}
+    
+    
+    
+    
+
+
 
 
 
@@ -540,14 +612,15 @@ plotGuideSet <- function(x,
             showID=TRUE,
             geneSymbol=TRUE,
             stacking=guideStacking,
-            fontcolor.group="black",
-            col.line="black"
+            fontcolor.group="black"#,
+            # col.line="black"
         )
         if (methods::is(x, "GuideSet")){
             Gviz::group(track) <- names
         }
         groups <- Gviz::group(track)
         Gviz::displayPars(track)[["fill"]] <- colors[groups]
+        Gviz::displayPars(track)[["col"]] <- colors[groups]
         if (!methods::is(x, "TxDb")){
             Gviz::transcript(track) <- names
         }

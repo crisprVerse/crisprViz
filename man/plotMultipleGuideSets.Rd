@@ -13,12 +13,13 @@ plotMultipleGuideSets(
   to = NULL,
   extend.left = 0,
   extend.right = 0,
+  margin = 1,
   includeIdeogram = TRUE,
   bands = NULL,
   bsgenome = NULL,
   onTargetScores = NULL,
   includeSNPTrack = TRUE,
-  displayPars = NULL
+  gcWindow = NULL
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ plotMultipleGuideSets(
 
 \item{extend.left, extend.right}{see ?plotTracks}
 
+\item{margin}{tbd}
+
 \item{includeIdeogram}{boolean}
 
 \item{bands}{see ?IdeogramTrack}
@@ -44,7 +47,7 @@ plotMultipleGuideSets(
 
 \item{includeSNPTrack}{tbd}
 
-\item{displayPars}{tbd (possible to implement?)}
+\item{gcWindow}{tbd}
 }
 \value{
 A Gviz plot... see ?Gviz::plotTracks

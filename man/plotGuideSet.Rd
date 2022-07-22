@@ -13,6 +13,7 @@ plotGuideSet(
   to = NULL,
   extend.left = 0,
   extend.right = 0,
+  margin = 1,
   includeIdeogram = TRUE,
   bands = NULL,
   guideStacking = "squish",
@@ -20,7 +21,8 @@ plotGuideSet(
   pamSiteOnly = FALSE,
   showGuideLabels = TRUE,
   onTargetScore = NULL,
-  includeSNPTrack = TRUE
+  includeSNPTrack = TRUE,
+  gcWindow = NULL
 )
 }
 \arguments{
@@ -35,6 +37,8 @@ plotGuideSet(
 \item{from, to}{see ?plotTracks}
 
 \item{extend.left, extend.right}{see ?plotTracks}
+
+\item{margin}{tbd (works only if either from/to are NULL)}
 
 \item{includeIdeogram}{boolean}
 
@@ -51,6 +55,8 @@ plotGuideSet(
 \item{onTargetScore}{color coding guides...need to add legend}
 
 \item{includeSNPTrack}{tbd}
+
+\item{gcWindow}{tbd}
 }
 \value{
 A Gviz plot... see ?Gviz::plotTracks

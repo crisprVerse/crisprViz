@@ -13,12 +13,13 @@
 #' @param annotations named list of annotations to plot (GRanges)
 #' @param from,to see ?plotTracks
 #' @param extend.left,extend.right see ?plotTracks
+#' @param margin tbd
 #' @param includeIdeogram boolean
 #' @param bands see ?IdeogramTrack
 #' @param bsgenome used in SequenceTrack
 #' @param onTargetScores list of on-target scores
 #' @param includeSNPTrack tbd
-#' @param displayPars tbd (possible to implement?)
+#' @param gcWindow tbd
 #' 
 #' @return A Gviz plot... see ?Gviz::plotTracks
 #' 
@@ -56,12 +57,13 @@ plotMultipleGuideSets <- function(x,
                                   to=NULL,
                                   extend.left=0,
                                   extend.right=0,
+                                  margin=1,
                                   includeIdeogram=TRUE,
                                   bands=NULL,
                                   bsgenome=NULL,
                                   onTargetScores=NULL,
                                   includeSNPTrack=TRUE,
-                                  displayPars=NULL
+                                  gcWindow=NULL
 ){
     ## check inputs
     guideSets <- .validateGuideSetList(x)
@@ -69,6 +71,11 @@ plotMultipleGuideSets <- function(x,
     geneModel <- .validateGRangesList(geneModel)
     stopifnot("targetGene must be a character vector or NULL" = {
         is.vector(targetGene, mode="character") || is.null(targetGene)
+    })
+    stopifnot("margin must be a non-negative numeric value" = {
+        is.vector(margin, mode="numeric") &&
+            length(margin) == 1 &&
+            margin >= 0
     })
     
     ## set tracks
@@ -97,10 +104,10 @@ plotMultipleGuideSets <- function(x,
     plotWindowSize <- max(plotWindowMax - plotWindowMin,
                           minimumWindowMargin)
     if (is.null(from)){
-        from <- plotWindowMin - plotWindowSize
+        from <- plotWindowMin - margin * plotWindowSize
     }
     if (is.null(to)){
-        to <- plotWindowMax + plotWindowSize
+        to <- plotWindowMax + margin * plotWindowSize
     }
     
     ## have geneTrack adjust to plot window
@@ -125,7 +132,24 @@ plotMultipleGuideSets <- function(x,
         snpTrack <- list()
     }
     
-    tracks <- c(list(ideogramTrack, genomeAxisTrack), geneTrack, annotationTrack, snpTrack, guideTrack)
+    if (!is.null(gcWindow)){
+        stopifnot("gcWindow must be a positive integer" = {
+            is.vector(gcWindow, "numeric") &&
+                length(gcWindow) == 1 &&
+                gcWindow == round(gcWindow)
+        })
+        gcTrack <- .getGcTrack(
+            bsgenome=bsgenome,
+            chr=chr,
+            from=from - extend.left,
+            to=to + extend.right,
+            gcWindow=gcWindow
+        )
+    } else {
+        gcTrack <- NULL
+    }
+    
+    tracks <- c(list(ideogramTrack, genomeAxisTrack), geneTrack, annotationTrack, snpTrack, gcTrack, guideTrack)
     tracks <- tracks[vapply(tracks, function(x){
         !is.null(x)
     }, FUN.VALUE=logical(1))]
