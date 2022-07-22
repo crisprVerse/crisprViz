@@ -55,24 +55,17 @@ library(crisprViz)
 
 Suppose we want to design the four best gRNAs using the SpCas9 CRISPR nuclease to knockout the human KRAS gene. To have the greatest impact on gene function we want to prioritize gRNAs that have greater isoform coverage and target closer to the 5' end of the CDS.
 
-We will start by finding all possible gRNAs that target the CDS of KRAS.
+Let's start by finding all possible gRNAs that target the CDS of KRAS.
 
 ``` {r}
-kras <- queryTxObject(txdb_human,
-                      featureType="cds",
-                      queryColumn="gene_symbol",
-                      queryValue="KRAS")
-gs <- findSpacers(kras,
-                  crisprNuclease=SpCas9,
-                  bsgenome=BSgenome.Hsapiens.UCSC.hg38)
-gs <- unique(gs)
-length(gs) # number of candidate gRNAs
+data("krasGuideSet", package="crisprViz")
+length(krasGuideSet) # number of candidate gRNAs
 ```
 
 Before we plot all of our candidate gRNAs, let's first generate a simple plot with a few gRNAs to familiarize ourselves with some plot components and options.
 
 ```{r}
-plotGuideSet(gs[1:4],
+plotGuideSet(krasGuideSet[1:4],
              geneModel=txdb_human,
              targetGene="KRAS")
 ```
@@ -93,7 +86,7 @@ kras_tx <- queryTxObject(txdb_human,
                          queryValue="KRAS")
 from <- min(start(kras_tx))
 to <- max(end(kras_tx))
-plotGuideSet(gs[1:4],
+plotGuideSet(krasGuideSet[1:4],
              geneModel=txdb_human,
              targetGene="KRAS",
              from=from,
@@ -102,10 +95,10 @@ plotGuideSet(gs[1:4],
              extend.right=1000)
 ```
  
-As calculated above, there are a total of `r length(gs)` candidate gRNAs targeting the CDS of KRAS. Including all of them could crowd the plot space, making it difficult to interpret. To alleviate this we can hide the gRNA labels by setting the `showGuideLabels` argument to `FALSE`.
+As calculated above, there are a total of `r length(krasGuideSet)` candidate gRNAs targeting the CDS of KRAS. Including all of them could crowd the plot space, making it difficult to interpret. To alleviate this we can hide the gRNA labels by setting the `showGuideLabels` argument to `FALSE`.
 
 ``` {r fig.height=10}
-plotGuideSet(gs,
+plotGuideSet(krasGuideSet,
              geneModel=txdb_human,
              targetGene="KRAS",
              showGuideLabels=FALSE,
@@ -121,12 +114,14 @@ We can see which gRNAs target this region by returning `showGuideLabels` to its 
 
 ```{r}
 # new window range around target exon
-exon_ranks <- mcols(kras)$exon_rank
-min_exon_rank <- min(exon_ranks)
-targetRegion <- kras[exon_ranks == min_exon_rank]
-from <- min(start(targetRegion))
-to <- max(end(targetRegion))
-plotGuideSet(gs,
+targetExon <- queryTxObject(txdb_human,
+                            featureType="cds",
+                            queryColumn="exon_id",
+                            queryValue="ENSE00000936617")
+targetExon <- unique(targetExon)
+from <- start(targetExon)
+to <- end(targetExon)
+plotGuideSet(krasGuideSet,
              geneModel=txdb_human,
              targetGene="KRAS",
              from=from,
@@ -140,7 +135,7 @@ At this resolution we can get a much better idea of spacer location and orientat
 If we have many gRNA targets in a smaller window and are not concerned with overlaps, we can configure the plot to only show the `pam_site`, rather than the entire protospacer and PAM sequence, by setting `pamSiteOnly` to `TRUE`.
 
 ```{r}
-plotGuideSet(gs,
+plotGuideSet(krasGuideSet,
              geneModel=txdb_human,
              targetGene="KRAS",
              from=from,
@@ -153,14 +148,11 @@ plotGuideSet(gs,
 Let's filter our `GuideSet` by the spacer names in the plot then briefly assess gRNA quality by adding an on-target score. We can pass the added score column to `onTargetScores` to color the spacers according to that score, with darker blue colors indicating higher scores. Note that for this plot we need not provide values for `from` and `to`, as the plot window adjusts to our filtered `GuideSet`.
 
 ```{r, message=FALSE, warning=FALSE}
-goodGuides <- c("spacer_80", "spacer_84", "spacer_88", "spacer_92",
-                "spacer_96", "spacer_100", "spacer_104", "spacer_108",
-                "spacer_112")
-gs <- gs[goodGuides]
-
-gs <- addOnTargetScores(gs,
-                        methods="deephf")
-plotGuideSet(gs,
+selectedGuides <- c("spacer_80", "spacer_84", "spacer_88", "spacer_92",
+                    "spacer_96", "spacer_100", "spacer_104", "spacer_108",
+                    "spacer_112")
+candidateGuides <- krasGuideSet[selectedGuides]
+plotGuideSet(candidateGuides,
              geneModel=txdb_human,
              targetGene="KRAS",
              onTargetScore="score_deephf")
@@ -171,38 +163,30 @@ plotGuideSet(gs,
 
 ## Plotting for precision targeting
 
-For a given CRISPR application, the target region may consist of only several base pairs rather than an exon or entire gene CDS. In these instances it is crucial to know exactly where the gRNAs target, and plots of gRNAs must be at a resolution capable of distinguishing individual bases. This is often the case for CRISPR base editor (CRISPRbe) applications, as the editing window for each gRNA is narrow and the results are specific to each target sequence.
+For a given CRISPR application, the target region may consist of only several base pairs rather than an exon or entire gene CDS. In these instances it may be importatnt to know exactly where the gRNAs target, and plots of gRNAs must be at a resolution capable of distinguishing individual bases. This is often the case for CRISPR base editor (CRISPRbe) applications, as the editing window for each gRNA is narrow and the results are specific to each target sequence.
 
 In this example we will zoom in on a few gRNAs targeting the 5' end of the human GPR21 gene. We want our plot to include genomic sequence information so we will set the `bsgenome` argument to the same `BSgenome` object we used to create our `GuideSet`.
 
-```{r, fig.height=6}
-gpr21 <- queryTxObject(txdb_human,
-                       featureType="cds",
-                       queryColumn="gene_symbol",
-                       queryValue="GPR21")
-be <- findSpacers(gpr21,
-                  crisprNuclease=BE4max,
-                  bsgenome=BSgenome.Hsapiens.UCSC.hg38)
-plotGuideSet(be[1:4],
+```{r, fig.height=4, fig.width=6}
+data("gpr21GuideSet", package="crisprViz")
+plotGuideSet(gpr21GuideSet,
              geneModel=txdb_human,
              targetGene="GPR21",
              bsgenome=BSgenome.Hsapiens.UCSC.hg38,
-             from=123034550,
-             to=123034610)
+             margin=0.3)
 ```
 
-The genomic sequence is given at the bottom of the plot as color-coded boxes. The color scheme used to describe the nucleotides is given in the biovizBase (link) package. If the plot has sufficient space, it will display nucleotide symbols rather than boxes. We can accomplish this by plotting a narrower range or by increasing the width of our plot space (see "Setting plot size" section).
+The genomic sequence is given at the bottom of the plot as color-coded boxes. The color scheme for describing the nucleotides is given in the [**biovizBase** package](https://bioconductor.org/packages/3.16/bioc/html/biovizBase.html). If the plot has sufficient space, it will display nucleotide symbols rather than boxes. We can accomplish this by plotting a narrower range or by increasing the width of our plot space (see "Setting plot size" section).
 
-The plot above was generated with a plot space width of 7 inches; here's the same plot after we increase the width to 10 inches.
+The plot above was generated with a plot space width of 6 inches; here's the same plot after we increase the width to 10 inches.
 
-```{r, fig.width=10, fig.height=6}
-# increase plot width from 7" to 10"
-plotGuideSet(be[1:4],
+```{r, fig.height=4, fig.width=10}
+# increase plot width from 6" to 10"
+plotGuideSet(gpr21GuideSet,
              geneModel=txdb_human,
              targetGene="GPR21",
              bsgenome=BSgenome.Hsapiens.UCSC.hg38,
-             from=123034550,
-             to=123034610)
+             margin=0.3)
 ```
 
 
@@ -213,40 +197,35 @@ In this scenario we want to express the human MMP7 gene via CRISPR activation (C
 Let's begin by constructing and plotting our `GuideSet`, and adding a track of repeat elements using the `annotations` argument.
 
 ```{r}
-data("tss_human", package="crisprDesignData")
+data("mmp7GuideSet", package="crisprViz")
 data("gr.repeats.hg38", package="crisprDesignData")
-mmp7 <- queryTss(tss_human,
-                 queryColumn="gene_symbol",
-                 queryValue="MMP7",
-                 tss_window=c(-2000, 0))
-gs <- findSpacers(mmp7,
-                  crisprNuclease=SpCas9,
-                  bsgenome=BSgenome.Hsapiens.UCSC.hg38)
-plotGuideSet(gs,
+from <- min(start(mmp7GuideSet))
+to <- max(end(mmp7GuideSet))
+plotGuideSet(mmp7GuideSet,
              geneModel=txdb_human,
              targetGene="MMP7",
              guideStacking="dense",
              annotations=list(Repeats=gr.repeats.hg38),
              pamSiteOnly=TRUE,
-             from=start(mmp7),
-             to=end(mmp7),
+             from=from,
+             to=to,
              extend.left=600,
              extend.right=100)
 ```
 
-Some of our candidate gRNAs target repeat elements, and likely have many off-targets as a result. Let's remove these gRNAs and regenerate the plot.
+Some of our candidate gRNAs target repeat elements and likely target a large number of loci in the genome, potentially causing unintended effects. Let's remove these gRNAs and regenerate the plot.
 
 ```{r}
-gs <- removeRepeats(gs,
-                    gr.repeats=gr.repeats.hg38)
-plotGuideSet(gs,
+filteredGuideSet <- removeRepeats(mmp7GuideSet,
+                                  gr.repeats=gr.repeats.hg38)
+plotGuideSet(filteredGuideSet,
              geneModel=txdb_human,
              targetGene="MMP7",
              guideStacking="dense",
              annotations=list(Repeats=gr.repeats.hg38),
              pamSiteOnly=TRUE,
-             from=start(mmp7),
-             to=end(mmp7),
+             from=from,
+             to=to,
              extend.left=600,
              extend.right=100)
 ```
@@ -256,26 +235,16 @@ We can similarly filter out gRNAs that overlap SNPs. However, rather than adding
 Conversely, there are specific genomic regions that would be beneficial to target, such as CAGE peaks and DNase I Hypersensitivity tracks (briefly, why). Let's retrieve those annotations from the Bioconductor package `AnnotationHub` and plot them alongside our gRNAs.
 
 ```{r}
-library(AnnotationHub)
-ah <- AnnotationHub()
-
-## lift over annotation tracks from hg19
-chain <- ah[["AH14150"]]
-cage <- ah[["AH5084"]]
-cage <- rtracklayer::liftOver(cage, chain)
-cage <- unlist(cage)
-dnase <- ah[['AH30743']]
-dnase <- rtracklayer::liftOver(dnase, chain)
-dnase <- unlist(dnase)
-
-plotGuideSet(gs,
+data("cage", package="crisprViz")
+data("dnase", package="crisprViz")
+plotGuideSet(filteredGuideSet,
              geneModel=txdb_human,
              targetGene="MMP7",
              guideStacking="dense",
              annotations=list(CAGE=cage, DNase=dnase),
              pamSiteOnly=TRUE,
-             from=start(mmp7),
-             to=end(mmp7),
+             from=from,
+             to=to,
              extend.left=600,
              extend.right=100)
 ```
@@ -284,10 +253,9 @@ Let's filter our `GuideSet` for guides overlapping the plotted DNase site then r
 
 ```{r}
 # filter GuideSet for gRNAs overlapping DNase track
-overlaps <- findOverlaps(gs, dnase, ignore.strand=TRUE)
-gs <- gs[queryHits(overlaps)]
-
-plotGuideSet(gs,
+overlaps <- findOverlaps(filteredGuideSet, dnase, ignore.strand=TRUE)
+finalGuideSet <- filteredGuideSet[queryHits(overlaps)]
+plotGuideSet(finalGuideSet,
              geneModel=txdb_human,
              targetGene="MMP7",
              guideStacking="dense",
@@ -296,29 +264,17 @@ plotGuideSet(gs,
              margin=0.4)
 ```
 
+
 ## Comparing multiple GuideSets targeting the same region
 
-Choice of CRISPR nuclease can be influenced by the abundance of qualify PAM sequences in the target region. For example, we would expect AT-rich regions to have fewer possible targets for the SpCas9 nuclease, whose PAM is NGG. In these regions, the CRISPR nuclease AsCas12a, whose PAM is TTTV, may prove more appropriate. Given multiple `GuideSet`s targeting the same region, we can compare the gRNAs of each in the same plot using `plotMultipleGuideSets`.
+The choice of the CRISPR nuclease can be influenced by the abundance of PAM sequences recognized by a given nuclease in the target region. For example, we would expect AT-rich regions to have fewer possible targets for the SpCas9 nuclease, whose PAM is NGG. In these regions, the CRISPR nuclease AsCas12a, whose PAM is TTTV, may prove more appropriate. Given multiple `GuideSet`s targeting the same region, we can compare the gRNAs of each in the same plot using `plotMultipleGuideSets`.
 
-Here, we pass our `GuideSet`s targeting an exon in the human gene LTN1 in a named list. Note that there are no available options for displaying guide labels or guide stacking, and only the PAM sites are plotted. We will also add a track to monitor the percent GC content (using a window roughly the length of our protospacers). Not surprisingly, this AT-rich region has fewer targets for SpCas9 compared to AsCas12a.
+Here, we pass our `GuideSet`s targeting an exon in the human gene LTN1 in a named list. Note that there are no available options for displaying guide labels or guide stacking, and only the PAM sites are plotted. We will also add a track to monitor the percent GC content (using a window roughly the length of our protospacers). Not surprisingly, this AT-rich region has fewer targets for SpCas9 compared to AsCas12a. (Note: when plotting several GuideSets you may need to increase the height of the plot space in order for the track names to appear on the left side; see "Setting plot size" below.)
 
-```{r}
-target <- queryTxObject(txdb_human,
-                        featureType="cds",
-                        queryColumn="exon_id",
-                        queryValue="ENSE00001705186")
-## SpCas9
-gs_cas9 <- findSpacers(target,
-                       crisprNuclease=SpCas9,
-                       bsgenome=BSgenome.Hsapiens.UCSC.hg38)
-gs_cas9 <- unique(gs_cas9)
-## AsCas12a
-gs_cas12a <- findSpacers(target,
-                         crisprNuclease=AsCas12a,
-                         bsgenome=BSgenome.Hsapiens.UCSC.hg38)
-gs_cas12a <- unique(gs_cas12a)
-## plot GuideSets
-plotMultipleGuideSets(list(SpCas9=gs_cas9, AsCas12a=gs_cas12a),
+```{r, fig.height=8}
+data("cas9GuideSet", package="crisprViz")
+data("cas12aGuideSet", package="crisprViz")
+plotMultipleGuideSets(list(SpCas9=cas9GuideSet, AsCas12a=cas12aGuideSet),
                       geneModel=txdb_human,
                       targetGene="LTN1",
                       bsgenome=BSgenome.Hsapiens.UCSC.hg38,

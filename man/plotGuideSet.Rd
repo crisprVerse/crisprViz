@@ -26,40 +26,67 @@ plotGuideSet(
 )
 }
 \arguments{
-\item{x}{tbd}
+\item{x}{A \linkS4class{GuideSet} object.}
 
-\item{geneModel}{tbd}
+\item{geneModel}{A \linkS4class{TxDb} object or a \linkS4class{GRangesList}
+object obtained using \link[crisprDesign]{TxDb2GRangesList}.}
 
-\item{targetGene}{gene symbol or Ensembl ID}
+\item{targetGene}{A character string giving the gene symbol or Ensembl ID of
+the gene to plot.}
 
-\item{annotations}{named list of annotations to plot (GRanges)}
+\item{annotations}{A named (optional) list of genomic annotations as
+\linkS4class{GRanges} to plot. Provided names are displayed as track
+titles.}
 
-\item{from, to}{see ?plotTracks}
+\item{from, to}{Numeric value giving the genomic coordinate range to plot;
+see \link[Gviz]{plotTracks}.}
 
-\item{extend.left, extend.right}{see ?plotTracks}
+\item{extend.left, extend.right}{Numeric value giving the length in bases to
+extend the plotting range; see \link[Gviz]{plotTracks}.}
 
-\item{margin}{tbd (works only if either from/to are NULL)}
+\item{margin}{A numeric value that sets the margin of the plotting range
+with respect to the range of \code{x}. The value is a ratio of the width
+of \code{x} considered as a single range, with a value of \code{1}
+(default) extending the plotting window by the same distance as that
+between \code{min(start(x))} and \code{max(end(x))}. Only works for the
+respective side of the plot if either \code{from} or \code{to} are
+\code{NULL}.}
 
-\item{includeIdeogram}{boolean}
+\item{includeIdeogram}{Logical; whether to include an
+\link[Gviz]{IdeogramTrack} in the plot.}
 
-\item{bands}{see ?IdeogramTrack}
+\item{bands}{An optional \code{data.frame} of cytoband information for the
+target genome; see \link[Gviz]{IdeogramTrack}.}
 
-\item{guideStacking}{how to stack all guides on a single track (squish, dense, or hide) or NA to have each guide occupy a separate track}
+\item{guideStacking}{Character string specifying how to stack guides.
+Options are \code{squish}, \code{dense}, \code{hide} (see
+\link[Gviz]{GeneRegionTrack}), or \code{NA} to have each guide occupy a
+separate track.}
 
-\item{bsgenome}{used in SequenceTrack}
+\item{bsgenome}{A \linkS4class{BSgenome} object; used to generate
+\link[Gviz]{SequenceTrack} and GC content \link[Gviz]{DataTrack}.}
 
-\item{pamSiteOnly}{whether to plot only the PAM site for spacers or plot the spacer and PAM sequence (default)}
+\item{pamSiteOnly}{Whether to plot only the PAM site in representing guides,
+or plot the full guide and PAM sequence (default).}
 
-\item{showGuideLabels}{tbd}
+\item{showGuideLabels}{Logical; whether to show labels for individual guides.}
 
-\item{onTargetScore}{color coding guides...need to add legend}
+\item{onTargetScore}{Optional column name in \code{mcols(x)} of on-target
+scores. Applies a color scheme to the guide track based on on-target
+scores, with light gray corresponding to 0 and dark blue corresponding
+to 1.}
 
-\item{includeSNPTrack}{tbd}
+\item{includeSNPTrack}{Logical; whether to include an
+\link[Gviz]{AnnotationTrack} for SNPs if such annotation exists in
+\code{x}.}
 
-\item{gcWindow}{tbd}
+\item{gcWindow}{If not \code{NULL}, a numeric value specifying the distance
+from a given base for which to establish a window for calculating GC
+content at that base. These values are then added to the plot in a
+\link[Gviz]{DataTrack}.}
 }
 \value{
-A Gviz plot... see ?Gviz::plotTracks
+A Gviz plot; see \link[Gviz]{plotTracks}.
 }
 \description{
 Function to plot guide targets stored in a
@@ -67,32 +94,19 @@ Function to plot guide targets stored in a
 \code{Gviz}. Target gene isoforms and other genomic annotation,
 along with the target chromosome ideogram and sequence, may also be
 added, permitting a comprehensive visualization of the genomic context
-targeted by spacers in the \linkS4class{GuideSet}.
+targeted by spacers in the \linkS4class{GuideSet} object.
 }
 \examples{
 \dontrun{
-## WIP =====================================================================
-library(crisprDesign)
-data(guideSetExample)
-library(crisprDesignData)
-data(txdb_human)
-library(BSgenome.Hsapiens.UCSC.hg38)
-gs <- guideSetExample[1:10]
-targetGene <- "IQSEC3"
-geneModel <- txdb_human
-plotGuideSet(gs,
-             geneModel=geneModel,
-             targetGene=targetGene)
-
-kras <- queryTxObject(txdb_human, "cds", "gene_symbol", "KRAS")
-kras <- kras[1]
-gs <- findSpacers(kras, crisprNuclease=SpCas9, bsgenome=BSgenome.Hsapiens.UCSC.hg38)
-ideogram <- readRDS("inst/shiny/data/ideogram_hg38.rds")
+data("krasGuideSet", package="crisprViz")
+plotGuideSet(krasGuideSet[1:4],
+             geneModel=txdb_human,
+             targetGene="KRAS")
 }
 
 }
 \seealso{
-\code{\link{plotMultipleGuideSets}}
+\link{plotMultipleGuideSets}
 }
 \author{
 Luke Hoberecht, Jean-Philippe Fortin
