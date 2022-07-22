@@ -58,7 +58,7 @@ Function to plot guide targets stored in a
 \code{Gviz}. Target gene isoforms and other genomic annotation,
 along with the target chromosome ideogram and sequence, may also be
 added, permitting a comprehensive visualization of the genomic context
-targeted by spacers in the \linkS4Class{GuideSet}.
+targeted by spacers in the \linkS4class{GuideSet}.
 }
 \examples{
 \dontrun{

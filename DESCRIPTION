@@ -1,6 +1,6 @@
 Package: crisprViz
 Title: Visualization Functions for GuideSet objects
-Version: 0.99.7\8
+Version: 0.99.9
 Authors@R: c(
     person("Jean-Philippe", "Fortin", email = "fortin946@gmail.com", role = c("aut", "cre")),
     person("Luke", "Hoberecht", email = "lukehob3@gmail.com", role = c("aut"))
