@@ -1,5 +1,5 @@
 Package: crisprViz
-Title: Visualization Functions for GuideSet objects
+Title: Visualization Functions for CRISPR gRNAs
 Version: 0.99.9
 Authors@R: c(
     person("Jean-Philippe", "Fortin", email = "fortin946@gmail.com", role = c("aut", "cre")),
@@ -10,24 +10,24 @@ Depends: R (>= 4.2.0),
     crisprBase (>= 0.99.15),
     crisprDesign (>= 0.99.77)
 Imports:
-	BiocGenerics,
-	Biostrings,
-	BSgenome,
-	GenomeInfoDb,
-	GenomicFeatures,
-	GenomicRanges,
+    BiocGenerics,
+    Biostrings,
+    BSgenome,
+    GenomeInfoDb,
+    GenomicFeatures,
+    GenomicRanges,
     Gviz,
-	IRanges,
-	methods,
-	S4Vectors
+    IRanges,
+    methods,
+    S4Vectors
 Suggests:
     BiocStyle,
-	BSgenome.Hsapiens.UCSC.hg38,
+    BSgenome.Hsapiens.UCSC.hg38,
     knitr,
     rmarkdown,
-	rtracklayer,
+    rtracklayer,
     testthat,
-	utils
+    utils
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
