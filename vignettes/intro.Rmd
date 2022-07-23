@@ -297,3 +297,10 @@ Here is an example using macOS Quartz device.
 grDevices::quartz("Example plot", width=6, height=7)
 # plot function
 ```
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+
