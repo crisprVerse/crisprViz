@@ -16,6 +16,7 @@ Imports:
     GenomeInfoDb,
     GenomicFeatures,
     GenomicRanges,
+    grDevices,
     Gviz,
     IRanges,
     methods,
