@@ -5,7 +5,7 @@ Authors@R: c(
     person("Jean-Philippe", "Fortin", email = "fortin946@gmail.com", role = c("aut", "cre")),
     person("Luke", "Hoberecht", email = "lukehob3@gmail.com", role = c("aut"))
     )
-Description: Visualization functions for GuideSet objects.
+Description: Visualization Functions for CRISPR gRNAs.
 Depends: R (>= 4.2.0),
     crisprBase (>= 0.99.15),
     crisprDesign (>= 0.99.77)
@@ -21,10 +21,10 @@ Imports:
     methods,
     S4Vectors
 Suggests:
-	AnnotationHub,
+    AnnotationHub,
     BiocStyle,
     BSgenome.Hsapiens.UCSC.hg38,
-	crisprDesignData,
+    crisprDesignData,
     knitr,
     rmarkdown,
     rtracklayer,
