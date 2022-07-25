@@ -1,20 +1,14 @@
 ---
-title: "Introduction to crisprViz"
-author: 
-- name: Luke Hoberecht
-  affiliation: Department of Data Science and Statistical Computing, gRED, Genentech
-  email: hoberecl@gene.com
-date: "`r Sys.Date()`"
+title: "crisprViz: visualization of CRISPR guide RNAs (gRNAs)"
 output: 
-  BiocStyle::html_document:
-    toc_float: true
-    #theme: paper
-    number_sections: true
-vignette: >
-  %\VignetteIndexEntry{Introduction to crisprViz}
-  %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  github_document:
+    toc: true
 ---
+
+Author: Luke Hoberecht
+
+Date: July 24, 2022
+
 
 ```{r, include=FALSE}
 knitr::opts_chunk$set(message=FALSE, warning=FALSE)
