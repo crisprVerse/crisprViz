@@ -59,8 +59,8 @@
 #'     together. 
 #' 
 #' @examples
-#' \dontrun{
-#' data("krasGuideSet", package="crisprViz")
+#' if (interactive()){
+#' data(krasGuideSet, package="crisprViz")
 #' plotGuideSet(krasGuideSet[1:4],
 #'              geneModel=txdb_human,
 #'              targetGene="KRAS")

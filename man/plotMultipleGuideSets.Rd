@@ -85,11 +85,11 @@ added, permitting a comprehensive visualization of the genomic context
 targeted by spacers in \linkS4class{GuideSet} objects.
 }
 \examples{
-\dontrun{
+if (interactive()){
 library(BSgenome.Hsapiens.UCSC.hg38)
-data("txdb_human", package="crisprDesignData")
-data("cas9GuideSet", package="crisprViz")
-data("cas12aGuideSet", package="crisprViz")
+data(txdb_human, package="crisprDesignData")
+data(cas9GuideSet, package="crisprViz")
+data(cas12aGuideSet, package="crisprViz")
 plotMultipleGuideSets(list(SpCas9=cas9GuideSet, AsCas12a=cas12aGuideSet),
                       geneModel=txdb_human,
                       targetGene="LTN1",
