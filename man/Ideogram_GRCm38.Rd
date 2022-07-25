@@ -15,8 +15,4 @@ data(Ideogram_GRCm38, package="crisprViz")
 \description{
 A data.frame of mouse (ideogram) bands (hg38)
 }
-\details{
-(how it was obtained, genome build, used in Gviz function to
-plot IdeogramTrack for mouse
-}
 \keyword{datasets}

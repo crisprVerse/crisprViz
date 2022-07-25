@@ -1,16 +1,16 @@
-#' @title Plotting a GuideSet and other genomic annotation
+#' @title Plotting a GuideSet and other genomic annotations
 #' 
 #' @description Function to plot guide targets stored in a
 #'     \linkS4class{GuideSet} object in a gene browser view supported by
 #'     \code{Gviz}. Target gene isoforms and other genomic annotation,
 #'     along with the target chromosome ideogram and sequence, may also be
 #'     added, permitting a comprehensive visualization of the genomic context
-#'     targeted by spacers in the \linkS4class{GuideSet} object.
+#'     around the target protospacer sequences.
 #' 
 #' @param x A \linkS4class{GuideSet} object.
 #' @param geneModel A \linkS4class{TxDb} object or a \linkS4class{GRangesList}
 #'     object obtained using \link[crisprDesign]{TxDb2GRangesList}.
-#' @param targetGene A character string giving the gene symbol or Ensembl ID of
+#' @param targetGene String specifying the gene symbol or Ensembl ID of
 #'     the gene to plot.
 #' @param annotations A named (optional) list of genomic annotations as
 #'     \linkS4class{GRanges} to plot. Provided names are displayed as track
@@ -53,9 +53,10 @@
 #' 
 #' @return A Gviz plot; see \link[Gviz]{plotTracks}.
 #' 
-#' @author Luke Hoberecht, Jean-Philippe Fortin
+#' @author Luke Hoberecht
 #' 
-#' @seealso \link{plotMultipleGuideSets}
+#' @seealso \link{plotMultipleGuideSets} for plotting multiple GuideSet objects
+#'     together. 
 #' 
 #' @examples
 #' \dontrun{
@@ -111,20 +112,16 @@ plotGuideSet <- function(x,
     })
     
     ## set tracks
-    ideogramTrack <- .getIdeogramTrack(
-        includeIdeogram=includeIdeogram,
-        chr=chr,
-        genome=unique(GenomeInfoDb::genome(guideSet)),
-        bands=bands
-    )
+    ideogramTrack <- .getIdeogramTrack(includeIdeogram=includeIdeogram,
+                                       chr=chr,
+                                       genome=unique(GenomeInfoDb::genome(guideSet)),
+                                       bands=bands)
     genomeAxisTrack <- .getGenomeAxisTrack()
-    guideTrack <- .getGuideTrack(
-        guideSet=guideSet,
-        guideStacking=guideStacking,
-        pamSiteOnly=pamSiteOnly,
-        showGuideLabels=showGuideLabels,
-        onTargetScore=onTargetScore
-    )
+    guideTrack <- .getGuideTrack( guideSet=guideSet,
+                                 guideStacking=guideStacking,
+                                 pamSiteOnly=pamSiteOnly,
+                                 showGuideLabels=showGuideLabels,
+                                 onTargetScore=onTargetScore)
     
     ## set plot range
     plotWindowMin <- lapply(guideTrack, min)
@@ -146,19 +143,15 @@ plotGuideSet <- function(x,
                                from=from - extend.left,
                                to=to + extend.right)
     
-    annotationTrack <- .getAnnotationTrack(
-        annotations=annotations,
-        chr=chr,
-        from=from,
-        to=to
-    )
+    annotationTrack <- .getAnnotationTrack(annotations=annotations,
+                                           chr=chr,
+                                           from=from,
+                                           to=to)
     
     
     if (includeSNPTrack){
-        snpTrack <- .getSnpTrack(
-            guideSet=guideSet,
-            chr=chr
-        )
+        snpTrack <- .getSnpTrack(guideSet=guideSet,
+                                 chr=chr)
     } else {
         snpTrack <- list()
     }
@@ -169,41 +162,40 @@ plotGuideSet <- function(x,
                 length(gcWindow) == 1 &&
                 gcWindow == round(gcWindow)
         })
-        gcTrack <- .getGcTrack(
-            bsgenome=bsgenome,
-            chr=chr,
-            from=from - extend.left,
-            to=to + extend.right,
-            gcWindow=gcWindow
-        )
+        gcTrack <- .getGcTrack(bsgenome=bsgenome,
+                               chr=chr,
+                               from=from - extend.left,
+                               to=to + extend.right,
+                               gcWindow=gcWindow)
     } else {
         gcTrack <- NULL
     }
         
     
-    tracks <- c(list(ideogramTrack, genomeAxisTrack), geneTrack, annotationTrack, snpTrack, gcTrack, guideTrack)
+    tracks <- c(list(ideogramTrack, genomeAxisTrack),
+                geneTrack,
+                annotationTrack,
+                snpTrack,
+                gcTrack,
+                guideTrack)
     tracks <- tracks[vapply(tracks, function(x){
         !is.null(x)
     }, FUN.VALUE=logical(1))]
     if (!is.null(bsgenome)){
-        tracks <- .addSequenceTrack(
-            tracks=tracks,
-            chr=chr,
-            bsgenome=bsgenome
-        )
+        tracks <- .addSequenceTrack(tracks=tracks,
+                                    chr=chr,
+                                    bsgenome=bsgenome)
     }
-    Gviz::plotTracks(
-        tracks,
-        chromosome=chr,
-        from=from,
-        to=to,
-        just.group="above",
-        groupAnnotation="group",
-        extend.left=extend.left,
-        extend.right=extend.right,
-        background.title="darkblue",
-        background.panel="#F5F9FC"
-    )
+    Gviz::plotTracks(tracks,
+                     chromosome=chr,
+                     from=from,
+                     to=to,
+                     just.group="above",
+                     groupAnnotation="group",
+                     extend.left=extend.left,
+                     extend.right=extend.right,
+                     background.title="darkblue",
+                     background.panel="#F5F9FC")
 }
 
 
@@ -231,13 +223,11 @@ plotGuideSet <- function(x,
     if (!includeIdeogram || (is.null(genome) && is.null(bands))){
         return(NULL)
     } else {
-        Gviz::IdeogramTrack(
-            chromosome=chr,
-            genome=genome,
-            bands=bands,
-            fontcolor="black",
-            cex=1
-        )
+        Gviz::IdeogramTrack(chromosome=chr,
+                            genome=genome,
+                            bands=bands,
+                            fontcolor="black",
+                            cex=1)
     }
 }
 
@@ -246,12 +236,10 @@ plotGuideSet <- function(x,
 #' @importFrom Gviz GenomeAxisTrack
 .getGenomeAxisTrack <- function(
 ){
-    Gviz::GenomeAxisTrack(
-        add35=TRUE,
-        add53=TRUE,
-        cex=1,
-        fontcolor="black"
-    )
+    Gviz::GenomeAxisTrack(add35=TRUE,
+                          add53=TRUE,
+                          cex=1,
+                          fontcolor="black")
 }
 
 
@@ -280,12 +268,10 @@ plotGuideSet <- function(x,
         return()
     }
     
-    transcripts <- crisprDesign::queryTxObject(
-        txObject=geneModel,
-        featureType="transcripts",
-        queryColumn="gene_symbol",
-        queryValue=targetGene
-    )
+    transcripts <- crisprDesign::queryTxObject(txObject=geneModel,
+                                               featureType="transcripts",
+                                               queryColumn="gene_symbol",
+                                               queryValue=targetGene)
     if (length(transcripts) == 0){
         warning("targetGene not found in geneModel, ignoring.",
                 immediate.=TRUE)
@@ -300,12 +286,10 @@ plotGuideSet <- function(x,
     transcripts <- IRanges::restrict(transcripts,
                                      start=from,
                                      end=to)
-    splicings <- crisprDesign::queryTxObject(
-        txObject=geneModel,
-        featureType="exons",
-        queryColumn="gene_symbol",
-        queryValue=targetGene
-    )
+    splicings <- crisprDesign::queryTxObject(txObject=geneModel,
+                                             featureType="exons",
+                                             queryColumn="gene_symbol",
+                                             queryValue=targetGene)
     splicings <- IRanges::restrict(splicings,
                                    start=from,
                                    end=to)
@@ -400,49 +384,41 @@ plotGuideSet <- function(x,
         as.integer(gsub('[A-Z]', '', x))
     }
     
-    transcripts <- data.frame(
-        tx_id=.id2Integer(transcripts$tx_id),
-        tx_chrom=as.character(GenomeInfoDb::seqnames(transcripts)),
-        tx_strand=as.character(BiocGenerics::strand(transcripts)),
-        tx_start=as.integer(BiocGenerics::start(transcripts)),
-        tx_end=as.integer(BiocGenerics::end(transcripts)),
-        tx_name=transcripts$tx_id,
-        gene_id=transcripts$gene_id)
-    splicings <- data.frame(
-        tx_id=.id2Integer(splicings$tx_id),
-        exon_rank=splicings$exon_rank,
-        exon_id=.id2Integer(splicings$exon_id),
-        exon_start=as.integer(BiocGenerics::start(splicings)),
-        exon_end=as.integer(BiocGenerics::end(splicings)),
-        cds_start=splicings$cds_start,
-        cds_end=splicings$cds_end)
+    transcripts <- data.frame(tx_id=.id2Integer(transcripts$tx_id),
+                              tx_chrom=as.character(GenomeInfoDb::seqnames(transcripts)),
+                              tx_strand=as.character(BiocGenerics::strand(transcripts)),
+                              tx_start=as.integer(BiocGenerics::start(transcripts)),
+                              tx_end=as.integer(BiocGenerics::end(transcripts)),
+                              tx_name=transcripts$tx_id,
+                              gene_id=transcripts$gene_id)
+    splicings <- data.frame(tx_id=.id2Integer(splicings$tx_id),
+                            exon_rank=splicings$exon_rank,
+                            exon_id=.id2Integer(splicings$exon_id),
+                            exon_start=as.integer(BiocGenerics::start(splicings)),
+                            exon_end=as.integer(BiocGenerics::end(splicings)),
+                            cds_start=splicings$cds_start,
+                            cds_end=splicings$cds_end)
     
     txdb <- suppressWarnings(
-        GenomicFeatures::makeTxDb(
-            transcripts=transcripts,
-            splicings=splicings,
-            chrominfo=chrominfo
-        )
+        GenomicFeatures::makeTxDb(transcripts=transcripts,
+                                  splicings=splicings,
+                                  chrominfo=chrominfo)
     )
     
-    txTrack <- Gviz::GeneRegionTrack(
-        range=txdb,
-        name=targetGene,
-        showID=TRUE,
-        # fill="darkorange",
-        geneSymbol=TRUE,
-        transcriptAnnotation="transcript",
-        fontcolor.group="black",
-        col.line="black"
-    )
+    txTrack <- Gviz::GeneRegionTrack(range=txdb,
+                                     name=targetGene,
+                                     showID=TRUE,
+                                     # fill="darkorange",
+                                     geneSymbol=TRUE,
+                                     transcriptAnnotation="transcript",
+                                     fontcolor.group="black",
+                                     col.line="black")
     
     
     ## separate function to add direction to labels
-    txTrack <- .addStrandToLabel(
-        track=txTrack,
-        label=paste0(targetGene, " (", Gviz::transcript(txTrack), ")"),
-        strand=Gviz::strand(txTrack)
-    )
+    txTrack <- .addStrandToLabel(track=txTrack,
+                                 label=paste0(targetGene, " (", Gviz::transcript(txTrack), ")"),
+                                 strand=Gviz::strand(txTrack))
     return(txTrack)
 }
 
@@ -460,10 +436,9 @@ plotGuideSet <- function(x,
                                 from,
                                 to
 ){
-    windowRange <- GenomicRanges::GRanges(
-        seqnames=chr,
-        ranges=IRanges::IRanges(start=from, end=to)
-    )
+    windowRange <- GenomicRanges::GRanges(seqnames=chr,
+                                          ranges=IRanges::IRanges(start=from,
+                                                                  end=to))
     annTracks <- lapply(seq_along(annotations), function(x){
         overlaps <- suppressWarnings(GenomicRanges::findOverlaps(
             annotations[[x]],
@@ -472,13 +447,11 @@ plotGuideSet <- function(x,
         ))
         hits <- S4Vectors::queryHits(overlaps)
         ann <- annotations[[x]][hits]
-        Gviz::AnnotationTrack(
-            ann,
-            shape="arrow",
-            fill="#F5CBD0",
-            showId=FALSE,
-            name=names(annotations)[x]
-        )
+        Gviz::AnnotationTrack(ann,
+                              shape="arrow",
+                              fill="#F5CBD0",
+                              showId=FALSE,
+                              name=names(annotations)[x])
     })
     return(annTracks)
 }
@@ -500,20 +473,18 @@ plotGuideSet <- function(x,
     }
     snps <- snps[!duplicated(snps$rs), , drop=FALSE]
     
-    snpRanges <- GenomicRanges::GRanges(
-        seqnames=chr,
-        ranges=IRanges::IRanges(start=snps$rs_site, width=snps$length)
+    snpRanges <- GenomicRanges::GRanges(seqnames=chr,
+                                        ranges=IRanges::IRanges(start=snps$rs_site,
+                                                                width=snps$length)
     )
     names(snpRanges) <- snps$rs
     
-    snpTrack <- Gviz::AnnotationTrack(
-        snpRanges,
-        chromosome=chr,
-        shape="box",
-        fill="#CDCDCD",
-        group=names(snpRanges),
-        name="SNP"
-    )
+    snpTrack <- Gviz::AnnotationTrack(snpRanges,
+                                      chromosome=chr,
+                                      shape="box",
+                                      fill="#CDCDCD",
+                                      group=names(snpRanges),
+                                      name="SNP")
     return(snpTrack)
 }
 
@@ -538,12 +509,10 @@ plotGuideSet <- function(x,
         methods::is(bsgenome, "BSgenome")
     })
     
-    plotSeq <- BSgenome::getSeq(
-        bsgenome,
-        names=chr,
-        start=from - gcWindow,
-        end=to + gcWindow
-    )
+    plotSeq <- BSgenome::getSeq(bsgenome,
+                                names=chr,
+                                start=from - gcWindow,
+                                end=to + gcWindow)
     
     centers <- seq(gcWindow + 1, length(plotSeq) - gcWindow)
     gcValues <- vapply(centers, function(x){
@@ -553,11 +522,10 @@ plotGuideSet <- function(x,
         round(100 * gcCount / (2*gcWindow+1), 1)
     }, FUN.VALUE=numeric(1))
     
-    gcRanges <- GenomicRanges::GRanges(
-        seqnames=chr,
-        ranges=IRanges::IRanges(start=seq(from, to), width=1),
-        gcValues=gcValues
-    )
+    gcRanges <- GenomicRanges::GRanges(seqnames=chr,
+                                       ranges=IRanges::IRanges(start=seq(from, to),
+                                                               width=1),
+                                       gcValues=gcValues)
     
     gcTrack <- Gviz::DataTrack(gcRanges, name="% GC", type="l")
     return(gcTrack)
@@ -596,9 +564,8 @@ plotGuideSet <- function(x,
             guideRanges <- list(guideRanges)
         }
     } else {
-        guideRanges <- .extractGuideRanges(
-            guideSet=guideSet,
-            guideStacking=guideStacking)
+        guideRanges <- .extractGuideRanges(guideSet=guideSet,
+                                           guideStacking=guideStacking)
     }
     
     if (is.na(guideStacking)){
@@ -608,10 +575,8 @@ plotGuideSet <- function(x,
         name <- "gRNAs"
     }
     
-    colors <- .getScoreColors(
-        guideSet=guideSet,
-        onTargetScore=onTargetScore
-    )
+    colors <- .getScoreColors(guideSet=guideSet,
+                              onTargetScore=onTargetScore)
     
     guideTracks <- lapply(guideRanges, function(x){
         if (methods::is(x, "TxDb")){
@@ -640,11 +605,9 @@ plotGuideSet <- function(x,
         }
         if (showGuideLabels){
             Gviz::displayPars(track) <- list(transcriptAnnotation="transcript")
-            track <- .addStrandToLabel(
-                track=track,
-                label=Gviz::transcript(track),
-                strand=Gviz::strand(track)
-            )
+            track <- .addStrandToLabel(track=track,
+                                       label=Gviz::transcript(track),
+                                       strand=Gviz::strand(track))
         }
         track
     })

@@ -117,10 +117,7 @@
         })
         mcolnames <- names(S4Vectors::mcols(guideSet))
         if (!onTargetScore %in% mcolnames){
-            warning("Could not find '", onTargetScore,
-                    "' column in guideSet, ignoring.",
-                    immediate.=TRUE)
-            onTargetScore <- NULL
+            stop("Could not find '", onTargetScore, "' column in guideSet")
         }
     }
     return(onTargetScore)

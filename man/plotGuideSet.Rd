@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotGuideSet.R
 \name{plotGuideSet}
 \alias{plotGuideSet}
-\title{Plotting a GuideSet and other genomic annotation}
+\title{Plotting a GuideSet and other genomic annotations}
 \usage{
 plotGuideSet(
   x,
@@ -31,7 +31,7 @@ plotGuideSet(
 \item{geneModel}{A \linkS4class{TxDb} object or a \linkS4class{GRangesList}
 object obtained using \link[crisprDesign]{TxDb2GRangesList}.}
 
-\item{targetGene}{A character string giving the gene symbol or Ensembl ID of
+\item{targetGene}{String specifying the gene symbol or Ensembl ID of
 the gene to plot.}
 
 \item{annotations}{A named (optional) list of genomic annotations as
@@ -94,7 +94,7 @@ Function to plot guide targets stored in a
 \code{Gviz}. Target gene isoforms and other genomic annotation,
 along with the target chromosome ideogram and sequence, may also be
 added, permitting a comprehensive visualization of the genomic context
-targeted by spacers in the \linkS4class{GuideSet} object.
+around the target protospacer sequences.
 }
 \examples{
 \dontrun{
@@ -106,8 +106,9 @@ plotGuideSet(krasGuideSet[1:4],
 
 }
 \seealso{
-\link{plotMultipleGuideSets}
+\link{plotMultipleGuideSets} for plotting multiple GuideSet objects
+together.
 }
 \author{
-Luke Hoberecht, Jean-Philippe Fortin
+Luke Hoberecht
 }
