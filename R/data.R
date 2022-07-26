@@ -39,6 +39,19 @@
 
 
 
+#' CompressedGRangesList describing the human KRAS gene.
+#'
+#' A \linkS4class{CompressedGRangesList} object describing the gene model of
+#'     the human KRAS gene. Coordinates were subset from \code{txdb_human} in
+#'     the \code{crisprDesignData} package (Ensembl release 104).
+#' 
+#' @format A \linkS4class{CompressedGRangesList} object.
+#'     
+#' @usage data(krasGeneModel, package="crisprViz")
+"krasGeneModel"
+
+
+
 #' Example GuideSet targeting the human GPR21 gene.
 #'
 #' An example \linkS4class{GuideSet} object targeting a section of the CDS of
@@ -54,6 +67,19 @@
 
 
 
+#' CompressedGRangesList describing the human GPR21 gene.
+#'
+#' A \linkS4class{CompressedGRangesList} object describing the gene model of
+#'     the human GPR21 gene. Coordinates were subset from \code{txdb_human} in
+#'     the \code{crisprDesignData} package (Ensembl release 104).
+#' 
+#' @format A \linkS4class{CompressedGRangesList} object.
+#'     
+#' @usage data(gpr21GeneModel, package="crisprViz")
+"gpr21GeneModel"
+
+
+
 #' Example GuideSet targeting the human MMP7 gene.
 #'
 #' An example \linkS4class{GuideSet} object targeting the promoter region of
@@ -66,6 +92,19 @@
 #'     
 #' @usage data(mmp7GuideSet, package="crisprViz")
 "mmp7GuideSet"
+
+
+
+#' CompressedGRangesList describing the human MMP7 gene.
+#'
+#' A \linkS4class{CompressedGRangesList} object describing the gene model of
+#'     the human MMP7 gene. Coordinates were subset from \code{txdb_human} in
+#'     the \code{crisprDesignData} package (Ensembl release 104).
+#' 
+#' @format A \linkS4class{CompressedGRangesList} object.
+#'     
+#' @usage data(mmp7GeneModel, package="crisprViz")
+"mmp7GeneModel"
 
 
 
@@ -96,6 +135,32 @@
 #'     
 #' @usage data(cas12aGuideSet, package="crisprViz")
 "cas12aGuideSet"
+
+
+
+#' CompressedGRangesList describing the human LTN1 gene.
+#'
+#' A \linkS4class{CompressedGRangesList} object describing the gene model of
+#'     the human LTN1 gene. Coordinates were subset from \code{txdb_human} in
+#'     the \code{crisprDesignData} package (Ensembl release 104).
+#' 
+#' @format A \linkS4class{CompressedGRangesList} object.
+#'     
+#' @usage data(ltn1GeneModel, package="crisprViz")
+"ltn1GeneModel"
+
+
+
+#' Subset of repeat elements for hg38.
+#'
+#' A \linkS4class{GRanges} object describing a subset of repeat elements for
+#'     the hg38 genome. Coordinates were subset from \code{gr.repeats.hg38} in
+#'     the \code{crisprDesignData} package.
+#' 
+#' @format A \linkS4class{GRanges} object.
+#'     
+#' @usage data(repeats, package="crisprViz")
+"repeats"
 
 
 

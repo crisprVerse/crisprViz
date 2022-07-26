@@ -1,6 +1,6 @@
 Package: crisprViz
 Title: Visualization Functions for CRISPR gRNAs
-Version: 0.99.12
+Version: 0.99.13
 Authors@R: c(
     person("Jean-Philippe", "Fortin", email = "fortin946@gmail.com", role = c("aut", "cre")),
     person("Luke", "Hoberecht", email = "lukehob3@gmail.com", role = c("aut"))
@@ -28,7 +28,6 @@ Suggests:
     AnnotationHub,
     BiocStyle,
     BSgenome.Hsapiens.UCSC.hg38,
-    crisprDesignData,
     knitr,
     rmarkdown,
     rtracklayer,
@@ -45,3 +44,4 @@ RoxygenNote: 7.2.0
 VignetteBuilder: knitr
 BugReports: https://github.com/Jfortin1/crisprViz/issues
 URL: https://github.com/Jfortin1/crisprViz
+LazyData: true

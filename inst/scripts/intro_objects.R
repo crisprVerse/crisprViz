@@ -2,6 +2,7 @@
 library(AnnotationHub)
 library(BSgenome.Hsapiens.UCSC.hg38)
 library(crisprDesign)
+## crisprDesignData can be obtained from github: devtools::install_github("Jfortin1/crisprDesignData")
 library(crisprDesignData)
 data("txdb_human", package="crisprDesignData")
 data("tss_human", package="crisprDesignData")
@@ -21,6 +22,12 @@ krasGuideSet <- addOnTargetScores(krasGuideSet,
                                   methods="deephf")
 use_data(krasGuideSet, compress="xz", overwrite=TRUE)
 
+krasGeneModel <- lapply(txdb_human, function(x){
+    x[x$gene_symbol == "KRAS"]
+})
+krasGeneModel <- as(krasGeneModel, "CompressedGRangesList")
+use_data(krasGeneModel, compress="xz", overwrite=TRUE)
+
 
 ## targeting GPR21 ============================================================
 gpr21 <- queryTxObject(txdb_human,
@@ -33,6 +40,12 @@ gpr21GuideSet <- findSpacers(gpr21,
 gpr21GuideSet <- gpr21GuideSet[1:4]
 use_data(gpr21GuideSet, compress="xz", overwrite=TRUE)
 
+gpr21GeneModel <- lapply(txdb_human, function(x){
+    x[x$gene_symbol == "GPR21"]
+})
+gpr21GeneModel <- as(gpr21GeneModel, "CompressedGRangesList")
+use_data(gpr21GeneModel, compress="xz", overwrite=TRUE)
+
 
 ## targeting MMP7 =============================================================
 mmp7 <- queryTss(tss_human,
@@ -44,14 +57,24 @@ mmp7GuideSet <- findSpacers(mmp7,
                             bsgenome=BSgenome.Hsapiens.UCSC.hg38)
 use_data(mmp7GuideSet, compress="xz", overwrite=TRUE)
 
+mmp7GeneModel <- lapply(txdb_human, function(x){
+    x[x$gene_symbol == "MMP7"]
+})
+mmp7GeneModel <- as(mmp7GeneModel, "CompressedGRangesList")
+use_data(mmp7GeneModel, compress="xz", overwrite=TRUE)
 
-## CAGE / DNase ===============================================================
+
+## repeats / CAGE / DNase =====================================================
 library(AnnotationHub)
 ah <- AnnotationHub()
 chain <- ah[["AH14150"]]
 targetRange <- mmp7
-start(targetRange) <- start(targetRange) - 1000
-end(targetRange) <- end(targetRange) + 1000
+start(targetRange) <- start(targetRange) - 5000
+end(targetRange) <- end(targetRange) + 5000
+
+data("gr.repeats.hg38", package="crisprDesignData")
+repeats <- subsetByOverlaps(gr.repeats.hg38, targetRange)
+use_data(repeats, compress="xz", overwrite=TRUE)
 
 cage <- ah[["AH5084"]]
 cage <- rtracklayer::liftOver(cage, chain)
@@ -82,4 +105,10 @@ cas12aGuideSet <- findSpacers(target,
                          bsgenome=BSgenome.Hsapiens.UCSC.hg38)
 cas12aGuideSet <- unique(cas12aGuideSet)
 use_data(cas12aGuideSet, compress="xz", overwrite=TRUE)
+
+ltn1GeneModel <- lapply(txdb_human, function(x){
+    x[x$gene_symbol == "LTN1"]
+})
+ltn1GeneModel <- as(ltn1GeneModel, "CompressedGRangesList")
+use_data(ltn1GeneModel, compress="xz", overwrite=TRUE)
 
