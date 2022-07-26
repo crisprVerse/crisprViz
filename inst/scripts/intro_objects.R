@@ -55,6 +55,11 @@ mmp7 <- queryTss(tss_human,
 mmp7GuideSet <- findSpacers(mmp7,
                             crisprNuclease=SpCas9,
                             bsgenome=BSgenome.Hsapiens.UCSC.hg38)
+## VCF of common SNPs obtained from dbSNP website: https://www.ncbi.nlm.nih.gov/variation/docs/human_variation_vcf/
+## and downloaded to local machine
+vcf <- "/Users/hoberecl/crisprIndices/snps/dbsnp151.grch38/00-common_all_snps_only.vcf.gz"
+mmp7GuideSet <- addSNPAnnotation(mmp7GuideSet,
+                                 vcf=vcf)
 use_data(mmp7GuideSet, compress="xz", overwrite=TRUE)
 
 mmp7GeneModel <- lapply(txdb_human, function(x){
@@ -64,7 +69,7 @@ mmp7GeneModel <- as(mmp7GeneModel, "CompressedGRangesList")
 use_data(mmp7GeneModel, compress="xz", overwrite=TRUE)
 
 
-## repeats / CAGE / DNase =====================================================
+## repeats / CAGE / DNase ==============================================
 library(AnnotationHub)
 ah <- AnnotationHub()
 chain <- ah[["AH14150"]]

@@ -240,7 +240,7 @@ elements in this region:
 data("repeats", package="crisprViz")
 ```
 
-Let's begin by plotting our `GuideSet`, and adding a track of repeat elements using the `annotations` argument: 
+Let's begin by plotting our `GuideSet`, and adding a track of repeat elements using the `annotations` argument. Our `guideSet` also contains SNP annotation, which we would also prefer our gRNAs to not overlap. To include a SNP annotation track, we will set `includeSNPTrack=TRUE` (default).
 
 ```{r}
 from <- min(start(mmp7GuideSet))
@@ -254,14 +254,17 @@ plotGuideSet(mmp7GuideSet,
              from=from,
              to=to,
              extend.left=600,
-             extend.right=100)
+             extend.right=100,
+             includeSNPTrack=TRUE)
 ```
 
-Some of our candidate gRNAs target repeat elements and likely target a large number of loci in the genome, potentially causing unintended effects. Let's remove these gRNAs and regenerate the plot.
+Some of our candidate gRNAs target repeat elements and likely target a large number of loci in the genome, potentially causing unintended effects, or overlap with SNPs, which can reduce its activity. Let's remove these gRNAs and regenerate the plot.
 
 ```{r}
 filteredGuideSet <- crisprDesign::removeRepeats(mmp7GuideSet,
                                                 gr.repeats=repeats)
+filteredGuideSet <- crisprDesign::filterSpacers(filteredGuideSet,
+                                                criteria=list(hasSNP=FALSE))
 plotGuideSet(filteredGuideSet,
              geneModel=mmp7GeneModel,
              targetGene="MMP7",
@@ -271,17 +274,11 @@ plotGuideSet(filteredGuideSet,
              from=from,
              to=to,
              extend.left=600,
-             extend.right=100)
+             extend.right=100,
+             includeSNPTrack=TRUE)
 ```
 
-We can similarly filter out gRNAs that overlap SNPs. However, rather
-than adding SNPs as a separate annotation, we can incorporate SNPs into our 
-`GuideSet` with the function `addSNPAnnptation()` from `crisprDesign`, and
-plot the SNPs track by having `includeSNPTrack` as `TRUE`. Note that since SNPs 
-are obtained from the `GuideSet`, only SNPs that overlap with gRNAs
-in the `GuideSet` will be plotted. The `addSNPAnnotation()` function 
-also appends a logical `hasSNP` column, which can be used
-to select gRNAs that do not overlap SNPs.
+Note how removing gRNAs that overlap SNPs from our `GuideSet` also removed the SNP track. To prevent plotting an empty track, `plotGuideSet` will only include a SNPs track if at least one gRNA includes SNP annotation (i.e. overlaps a SNP).
 
 Conversely, there are specific genomic regions that would be beneficial to 
 target, such as CAGE peaks and DNase I Hypersensitivity tracks. We show in 

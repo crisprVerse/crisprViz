@@ -61,8 +61,9 @@
 #' @examples
 #' if (interactive()){
 #' data(krasGuideSet, package="crisprViz")
+#' data(krasGeneModel, package="crisprViz")
 #' plotGuideSet(krasGuideSet[1:4],
-#'              geneModel=txdb_human,
+#'              geneModel=krasGeneModel,
 #'              targetGene="KRAS")
 #' }
 #' 

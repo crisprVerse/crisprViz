@@ -87,11 +87,11 @@ targeted by spacers in \linkS4class{GuideSet} objects.
 \examples{
 if (interactive()){
 library(BSgenome.Hsapiens.UCSC.hg38)
-data(txdb_human, package="crisprDesignData")
 data(cas9GuideSet, package="crisprViz")
 data(cas12aGuideSet, package="crisprViz")
+data(ltn1GeneModel, package="crisprViz")
 plotMultipleGuideSets(list(SpCas9=cas9GuideSet, AsCas12a=cas12aGuideSet),
-                      geneModel=txdb_human,
+                      geneModel=ltn1GeneModel,
                       targetGene="LTN1",
                       bsgenome=BSgenome.Hsapiens.UCSC.hg38,
                       margin=0.2,
