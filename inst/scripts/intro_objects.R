@@ -78,19 +78,19 @@ start(targetRange) <- start(targetRange) - 5000
 end(targetRange) <- end(targetRange) + 5000
 
 data("gr.repeats.hg38", package="crisprDesignData")
-repeats <- subsetByOverlaps(gr.repeats.hg38, targetRange)
+repeats <- subsetByOverlaps(gr.repeats.hg38, targetRange, ignore.strand=TRUE)
 use_data(repeats, compress="xz", overwrite=TRUE)
 
 cage <- ah[["AH5084"]]
 cage <- rtracklayer::liftOver(cage, chain)
 cage <- unlist(cage)
-cage <- subsetByOverlaps(cage, targetRange)
+cage <- subsetByOverlaps(cage, targetRange, ignore.strand=TRUE)
 use_data(cage, compress="xz", overwrite=TRUE)
 
 dnase <- ah[['AH30743']]
 dnase <- rtracklayer::liftOver(dnase, chain)
 dnase <- unlist(dnase)
-dnase <- subsetByOverlaps(dnase, targetRange)
+dnase <- subsetByOverlaps(dnase, targetRange, ignore.strand=TRUE)
 use_data(dnase, compress="xz", overwrite=TRUE)
 
 
