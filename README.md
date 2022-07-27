@@ -56,7 +56,6 @@ following commands inside of an R session:
 install.packages("devtools")
 devtools::install_github("Jfortin1/crisprBase")
 devtools::install_github("Jfortin1/crisprDesign")
-devtools::install_github("Jfortin1/crisprDesignData")
 devtools::install_github("Jfortin1/crisprViz")
 ```
 
@@ -64,20 +63,12 @@ devtools::install_github("Jfortin1/crisprViz")
 
 All examples in this vignette will use human genome assembly `hg38` from
 the `BSgenome.Hsapiens.UCSC.hg38` package and gene model coordinates
-from Ensembl release 104 via the `crisprDesignData` package. We first
-load the necessary packages for the analysis
+from Ensembl release 104. We begin by loading the necessary packages.
 
 ``` r
 library(BSgenome.Hsapiens.UCSC.hg38)
 library(crisprDesign)
-library(crisprDesignData)
 library(crisprViz)
-```
-
-and load the gene model needed for our analysis:
-
-``` r
-data(txdb_human, package="crisprDesignData")
 ```
 
 ## Visualizing the best gRNAs for a given gene
@@ -88,35 +79,37 @@ gene function we want to prioritize gRNAs that have greater isoform
 coverage, and target closer to the 5’ end of the CDS.
 
 Let’s load a precomputed `GuideSet` object containing all possible gRNAs
-targeting the the CDS of KRAS:
+targeting the the CDS of KRAS, and a `GRangesList` object describing the
+gene model for KRAS.
 
 ``` r
 data("krasGuideSet", package="crisprViz")
+data("krasGeneModel", package="crisprViz")
 length(krasGuideSet) # number of candidate gRNAs
 ```
 
     ## [1] 52
 
-To see how to design such gRNAs, see the `crisprDesign` package. Before
-we plot all of our candidate gRNAs, let’s first generate a simple plot
-with a few gRNAs to familiarize ourselves with some plot components and
+For how to design such gRNAs, see the `crisprDesign` package. Before we
+plot all of our candidate gRNAs, let’s first generate a simple plot with
+a few gRNAs to familiarize ourselves with some plot components and
 options.
 
 ``` r
 plotGuideSet(krasGuideSet[1:4],
-             geneModel=txdb_human,
+             geneModel=krasGeneModel,
              targetGene="KRAS")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 There are a few things to note here.
 
 -   The ideogram track and genome axis track are at the top of our plot
     and give us coordinate information.
 -   Our `targetGene` KRAS is plotted next, using coordinates from the
-    provided `geneModel`, followed by our spacer subset. The name of
-    each track is given on the left.
+    provided gene model `krasGeneModel`, followed by our spacer subset.
+    The name of each track is given on the left.
 -   The strand information for each track is included in the label: `<-`
     for reverse strand and `->` for forward strand.
 -   While we can identify which exon each spacer targets (which may be
@@ -132,14 +125,10 @@ which also reveals an additional isoform that is not targeted by any
 spacer in this example subset.
 
 ``` r
-kras_tx <- queryTxObject(txdb_human,
-                         featureType="transcripts",
-                         queryColumn="gene_symbol",
-                         queryValue="KRAS")
-from <- min(start(kras_tx))
-to <- max(end(kras_tx))
+from <- min(start(krasGeneModel$transcripts))
+to <- max(end(krasGeneModel$transcripts))
 plotGuideSet(krasGuideSet[1:4],
-             geneModel=txdb_human,
+             geneModel=krasGeneModel,
              targetGene="KRAS",
              from=from,
              to=to,
@@ -147,7 +136,7 @@ plotGuideSet(krasGuideSet[1:4],
              extend.right=1000)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 As calculated above, there are a total of 52 candidate gRNAs targeting
 the CDS of KRAS. Including all of them could crowd the plot space,
@@ -156,7 +145,7 @@ labels by setting the `showGuideLabels` argument to `FALSE`.
 
 ``` r
 plotGuideSet(krasGuideSet,
-             geneModel=txdb_human,
+             geneModel=krasGeneModel,
              targetGene="KRAS",
              showGuideLabels=FALSE,
              from=from,
@@ -165,7 +154,7 @@ plotGuideSet(krasGuideSet,
              extend.right=1000)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 At the gene level, the plot window is too large to discern details for
 each spacer target. However, we can see five distinct clusters of spacer
@@ -180,7 +169,7 @@ focus on our exon of interest.
 
 ``` r
 # new window range around target exon
-targetExon <- queryTxObject(txdb_human,
+targetExon <- queryTxObject(krasGeneModel,
                             featureType="cds",
                             queryColumn="exon_id",
                             queryValue="ENSE00000936617")
@@ -188,7 +177,7 @@ targetExon <- unique(targetExon)
 from <- start(targetExon)
 to <- end(targetExon)
 plotGuideSet(krasGuideSet,
-             geneModel=txdb_human,
+             geneModel=krasGeneModel,
              targetGene="KRAS",
              from=from,
              to=to,
@@ -196,14 +185,14 @@ plotGuideSet(krasGuideSet,
              extend.right=20)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 At this resolution we can get a much better idea of spacer location and
 orientation. In particular, the PAM sequence is visible as a narrow box
 on the 3’ side of our protospacer sequences. We can also distinctly see
-which spacer targets overlap–it may be best to avoid pairing such
-spacers in some applications lest they sterically interfere with each
-other.
+which spacer targets overlap each other–it may be best to avoid pairing
+such spacers in some applications lest they sterically interfere with
+each other.
 
 If we have many gRNA targets in a smaller window and are not concerned
 with overlaps, we can configure the plot to only show the `pam_site`,
@@ -212,7 +201,7 @@ rather than the entire protospacer and PAM sequence, by setting
 
 ``` r
 plotGuideSet(krasGuideSet,
-             geneModel=txdb_human,
+             geneModel=krasGeneModel,
              targetGene="KRAS",
              from=from,
              to=to,
@@ -221,14 +210,13 @@ plotGuideSet(krasGuideSet,
              pamSiteOnly=TRUE)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
-Let’s filter our `GuideSet` by the spacer names in the plot then briefly
-assess gRNA quality by adding an on-target score. We can pass the added
-score column to `onTargetScores` to color the spacers according to that
-score, with darker blue colors indicating higher scores. Note that for
-this plot we need not provide values for `from` and `to`, as the plot
-window adjusts to our filtered `GuideSet`.
+Let’s filter our `GuideSet` by the spacer names in the plot then pass an
+on-target score column in our `GuideSet` to `onTargetScores` to color
+the spacers according to that score, with darker blue colors indicating
+higher scores. Note that for this plot we need not provide values for
+`from` and `to`, as the plot window adjusts to our filtered `GuideSet`.
 
 ``` r
 selectedGuides <- c("spacer_80", "spacer_84", "spacer_88", "spacer_92",
@@ -236,12 +224,12 @@ selectedGuides <- c("spacer_80", "spacer_84", "spacer_88", "spacer_92",
                     "spacer_112")
 candidateGuides <- krasGuideSet[selectedGuides]
 plotGuideSet(candidateGuides,
-             geneModel=txdb_human,
+             geneModel=krasGeneModel,
              targetGene="KRAS",
              onTargetScore="score_deephf")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 <!-- ![legend caption](file path) -->
 
@@ -260,23 +248,25 @@ the human GPR21 gene. We want our plot to include genomic sequence
 information so we will set the `bsgenome` argument to the same
 `BSgenome` object we used to create our `GuideSet`.
 
-First, we load the precmputed `GuideSet` object for GPR21:
+First, we load the precomputed `GuideSet` and gene model objects for
+GPR21,
 
 ``` r
 data("gpr21GuideSet", package="crisprViz")
+data("gpr21GeneModel", package="crisprViz")
 ```
 
-and then plot the gRNAs:
+and then plot the gRNAs.
 
 ``` r
 plotGuideSet(gpr21GuideSet,
-             geneModel=txdb_human,
+             geneModel=gpr21GeneModel,
              targetGene="GPR21",
              bsgenome=BSgenome.Hsapiens.UCSC.hg38,
              margin=0.3)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 The genomic sequence is given at the bottom of the plot as color-coded
 boxes. The color scheme for describing the nucleotides is given in the
@@ -293,83 +283,85 @@ the same plot after we increase the width to 10 inches:
 ``` r
 # increase plot width from 6" to 10"
 plotGuideSet(gpr21GuideSet,
-             geneModel=txdb_human,
+             geneModel=gpr21GeneModel,
              targetGene="GPR21",
              bsgenome=BSgenome.Hsapiens.UCSC.hg38,
              margin=0.3)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ## CRISPRa and adding genomic annotations
 
 In this scenario we want to increase expression of the human MMP7 gene
 via CRISPR activation (CRISPRa). We will use the SpCas9 CRISPR nuclease.
 
-We first obtain the precomputed `GuideSet` from the `crisprDesignData`
-package:
-
 ``` r
 data("mmp7GuideSet", package="crisprViz")
+data("mmp7GeneModel", package="crisprViz")
 ```
 
 The `GuideSet` contains candidate gRNAs in the 2kb window immediately
-upstream of the TSS of MMP7. We also obtain a `GRanges` object
-containing repeat elements in the human genome:
+upstream of the TSS of MMP7. We will also use a `GRanges` object
+containing repeat elements in this region:
 
 ``` r
-data("gr.repeats.hg38", package="crisprDesignData")
+data("repeats", package="crisprViz")
 ```
 
 Let’s begin by plotting our `GuideSet`, and adding a track of repeat
-elements using the `annotations` argument:
+elements using the `annotations` argument. Our `guideSet` also contains
+SNP annotation, which we would also prefer our gRNAs to not overlap. To
+include a SNP annotation track, we will set `includeSNPTrack=TRUE`
+(default).
 
 ``` r
 from <- min(start(mmp7GuideSet))
 to <- max(end(mmp7GuideSet))
 plotGuideSet(mmp7GuideSet,
-             geneModel=txdb_human,
+             geneModel=mmp7GeneModel,
              targetGene="MMP7",
              guideStacking="dense",
-             annotations=list(Repeats=gr.repeats.hg38),
+             annotations=list(Repeats=repeats),
              pamSiteOnly=TRUE,
              from=from,
              to=to,
              extend.left=600,
-             extend.right=100)
+             extend.right=100,
+             includeSNPTrack=TRUE)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+Some of our candidate gRNAs target repeat elements and likely target a
+large number of loci in the genome, potentially causing unintended
+effects, or overlap with SNPs, which can reduce its activity. Let’s
+remove these gRNAs and regenerate the plot.
+
+``` r
+filteredGuideSet <- crisprDesign::removeRepeats(mmp7GuideSet,
+                                                gr.repeats=repeats)
+filteredGuideSet <- crisprDesign::filterSpacers(filteredGuideSet,
+                                                criteria=list(hasSNP=FALSE))
+plotGuideSet(filteredGuideSet,
+             geneModel=mmp7GeneModel,
+             targetGene="MMP7",
+             guideStacking="dense",
+             annotations=list(Repeats=repeats),
+             pamSiteOnly=TRUE,
+             from=from,
+             to=to,
+             extend.left=600,
+             extend.right=100,
+             includeSNPTrack=TRUE)
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
-Some of our candidate gRNAs target repeat elements and likely target a
-large number of loci in the genome, potentially causing unintended
-effects. Let’s remove these gRNAs and regenerate the plot.
-
-``` r
-filteredGuideSet <- crisprDesign::removeRepeats(mmp7GuideSet,
-                                                gr.repeats=gr.repeats.hg38)
-plotGuideSet(filteredGuideSet,
-             geneModel=txdb_human,
-             targetGene="MMP7",
-             guideStacking="dense",
-             annotations=list(Repeats=gr.repeats.hg38),
-             pamSiteOnly=TRUE,
-             from=from,
-             to=to,
-             extend.left=600,
-             extend.right=100)
-```
-
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
-
-We can similarly filter out gRNAs that overlap SNPs. However, rather
-than adding SNPs as a separate annotation, we can incorporate SNPs into
-our `GuideSet` with the function `addSNPAnnptation()` from
-`crisprDesign`, and plot the SNPs track by having `includeSNPTrack` as
-`TRUE`. Note that since SNPs are obtained from the `GuideSet`, only SNPs
-that overlap with gRNAs in the `GuideSet` will be plotted. The
-`addSNPAnnotation()` function also appends a logical `hasSNP` column,
-which can be used to select gRNAs that do not overlap SNPs.
+Note how removing gRNAs that overlap SNPs from our `GuideSet` also
+removed the SNP track. To prevent plotting an empty track,
+`plotGuideSet` will only include a SNPs track if at least one gRNA
+includes SNP annotation (i.e. overlaps a SNP).
 
 Conversely, there are specific genomic regions that would be beneficial
 to target, such as CAGE peaks and DNase I Hypersensitivity tracks. We
@@ -387,7 +379,7 @@ We now plot gRNAs alongside with those two tracks:
 
 ``` r
 plotGuideSet(filteredGuideSet,
-             geneModel=txdb_human,
+             geneModel=mmp7GeneModel,
              targetGene="MMP7",
              guideStacking="dense",
              annotations=list(CAGE=cage, DNase=dnase),
@@ -398,7 +390,7 @@ plotGuideSet(filteredGuideSet,
              extend.right=100)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 Let’s filter our `GuideSet` for guides overlapping the plotted DNase
 site then regenerate the plot.
@@ -408,7 +400,7 @@ site then regenerate the plot.
 overlaps <- findOverlaps(filteredGuideSet, dnase, ignore.strand=TRUE)
 finalGuideSet <- filteredGuideSet[queryHits(overlaps)]
 plotGuideSet(finalGuideSet,
-             geneModel=txdb_human,
+             geneModel=mmp7GeneModel,
              targetGene="MMP7",
              guideStacking="dense",
              annotations=list(CAGE=cage, DNase=dnase),
@@ -416,7 +408,7 @@ plotGuideSet(finalGuideSet,
              margin=0.4)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ## Comparing multiple GuideSets targeting the same region
 
@@ -443,18 +435,19 @@ We first load the precomputed `GuideSet` objects:
 ``` r
 data("cas9GuideSet", package="crisprViz")
 data("cas12aGuideSet", package="crisprViz")
+data("ltn1GeneModel", package="crisprViz")
 ```
 
 ``` r
 plotMultipleGuideSets(list(SpCas9=cas9GuideSet, AsCas12a=cas12aGuideSet),
-                      geneModel=txdb_human,
+                      geneModel=ltn1GeneModel,
                       targetGene="LTN1",
                       bsgenome=BSgenome.Hsapiens.UCSC.hg38,
                       margin=0.2,
                       gcWindow=10)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 # Setting plot size
 
@@ -493,13 +486,13 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] crisprViz_0.99.10                 crisprDesignData_0.99.10         
-    ##  [3] crisprDesign_0.99.109             crisprBase_1.1.2                 
-    ##  [5] BSgenome.Hsapiens.UCSC.hg38_1.4.4 BSgenome_1.63.5                  
-    ##  [7] rtracklayer_1.55.4                Biostrings_2.63.2                
-    ##  [9] XVector_0.35.0                    GenomicRanges_1.47.6             
-    ## [11] GenomeInfoDb_1.31.6               IRanges_2.29.1                   
-    ## [13] S4Vectors_0.33.11                 BiocGenerics_0.41.2              
+    ##  [1] crisprViz_0.99.14                 crisprDesign_0.99.109            
+    ##  [3] crisprBase_1.1.2                  BSgenome.Hsapiens.UCSC.hg38_1.4.4
+    ##  [5] BSgenome_1.63.5                   rtracklayer_1.55.4               
+    ##  [7] Biostrings_2.63.2                 XVector_0.35.0                   
+    ##  [9] GenomicRanges_1.47.6              GenomeInfoDb_1.31.6              
+    ## [11] IRanges_2.29.1                    S4Vectors_0.33.11                
+    ## [13] BiocGenerics_0.41.2              
     ## 
     ## loaded via a namespace (and not attached):
     ##   [1] backports_1.4.1               Hmisc_4.7-0                  
@@ -521,8 +514,8 @@ sessionInfo()
     ##  [33] glue_1.6.2                    gtable_0.3.0                 
     ##  [35] zlibbioc_1.41.0               DelayedArray_0.21.2          
     ##  [37] scales_1.1.1                  DBI_1.1.2                    
-    ##  [39] Rcpp_1.0.8.3                  htmlTable_2.4.0              
-    ##  [41] xtable_1.8-4                  progress_1.2.2               
+    ##  [39] Rcpp_1.0.8.3                  xtable_1.8-4                 
+    ##  [41] progress_1.2.2                htmlTable_2.4.0              
     ##  [43] reticulate_1.25               foreign_0.8-82               
     ##  [45] bit_4.0.4                     Formula_1.2-4                
     ##  [47] htmlwidgets_1.5.4             httr_1.4.2                   
