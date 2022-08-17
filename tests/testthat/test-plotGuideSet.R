@@ -12,7 +12,6 @@ myPlotGuideSet <- function(file,...){
     plotGuideSet(...)
     dev.off()
 }
-plotOutput <- c(`null device`=1L)
 
 
 test_that('Produces a plot as expected with one gRNA', {
@@ -22,7 +21,6 @@ test_that('Produces a plot as expected with one gRNA', {
                           geneModel=krasGeneModel,
                           targetGene="KRAS")
     expect_true(file.exists(file))
-    expect_equal(out, plotOutput)
 })
 
 
@@ -33,7 +31,6 @@ test_that('Produces a plot as expected with multiple gRNAs', {
                           geneModel=krasGeneModel,
                           targetGene="KRAS")
     expect_true(file.exists(file))
-    expect_equal(out, plotOutput)
 })
 
 

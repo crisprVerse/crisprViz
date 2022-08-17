@@ -11,7 +11,6 @@ myPlotMultipleGuideSets <- function(file, ...){
     plotMultipleGuideSets(...)
     dev.off()
 }
-plotOutput <- c(`null device`=1L)
 
 
 test_that('Produces a plot as expected with 2 gRNA tracks ', {
@@ -23,7 +22,6 @@ test_that('Produces a plot as expected with 2 gRNA tracks ', {
                                    geneModel=ltn1GeneModel,
                                    targetGene="LTN1")
     expect_true(file.exists(file))
-    expect_equal(out, plotOutput)
 })
 
 
@@ -36,7 +34,6 @@ test_that('Produces a plot as expected with 1 gRNA track', {
                                    geneModel=ltn1GeneModel,
                                    targetGene="LTN1")
     expect_true(file.exists(file))
-    expect_equal(out, plotOutput)
 })
 
 
