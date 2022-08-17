@@ -29,15 +29,14 @@ This vignette walks through several use cases that demonstrate the range of and 
 
 This package is supported for macOS, Linux and Windows machines. Packages were developed and tested on R version 4.2.
 
-## Installation
+## Installation from Bioconductor
 
-`crisprViz` and its dependencies can be installed by typing the following commands inside of an R session:
+`crisprViz` can be installed from Bioconductor using the following
+commands in a fresh R session:
 
-```r
-install.packages("devtools")
-devtools::install_github("Jfortin1/crisprBase")
-devtools::install_github("Jfortin1/crisprDesign")
-devtools::install_github("Jfortin1/crisprViz")
+```{r, eval=FALSE}
+install.packages("BiocManager")
+BiocManager::install("crisprViz")
 ```
 
 

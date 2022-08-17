@@ -1,6 +1,3 @@
-
-
-
 #' @importFrom methods is
 .validateGuideSet <- function(obj,
                               eMessage=NULL
@@ -14,10 +11,6 @@
     }
     return(obj)
 }
-
-
-
-
 
 
 .validateGuideSetList <- function(obj,
@@ -34,18 +27,12 @@
 }
 
 
-
-
-
-
-
-
 #' @importFrom GenomeInfoDb seqnames
 .validateSingleChr <- function(obj
 ){
     chr <- GenomeInfoDb::seqnames(obj)
     chr <- as.character(unique(chr))
-    stopifnot("Only GuideSets targeting a single chromosome may be plotted." = {
+    stopifnot("Only GuideSets targeting a single chromosome may be plotted."={
         length(chr) == 1
     })
     return(chr)
@@ -70,9 +57,6 @@
     }
     return(chr)
 }
-
-
-
 
 
 
@@ -101,10 +85,6 @@
     }
     return(obj)
 }
-
-
-
-
 
 
 .validateOnTargetScore <- function(onTargetScore,

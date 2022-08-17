@@ -2,7 +2,7 @@
 title: "Introduction to crisprViz"
 author: 
 - name: Luke Hoberecht
-  affiliation: Department of Data Science and Statistical Computing, gRED, Genentech
+  affiliation: Data Science and Statistical Computing, gRED, Genentech
   email: hoberecl@gene.com
 date: "`r Sys.Date()`"
 output: 
@@ -23,9 +23,16 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE)
 
 # Introduction
 
-The `crisprViz` package enables the graphical interpretation of `GuideSet` objects from the `crisprDesign` package by plotting guide RNA (gRNA) cutting locations against their target gene or other genomic region. These genomic plots are constructed using the `Gviz` package from Bioconductor.
+The `crisprViz` package enables the graphical interpretation of `GuideSet` 
+objects from the `crisprDesign` package by plotting guide RNA (gRNA) 
+cutting locations against their target gene or other genomic region. 
+These genomic plots are constructed using the `Gviz` package from Bioconductor.
 
-This vignette walks through several use cases that demonstrate the range of and how to use plotting functions in the `crisprViz` package. This vignette also uses the `crisprDesign` package to manipulate `GuideSet` objects in conjunction with plotting in the process of gRNA design. For more information about the `crisprDesign` package see [vignettes].
+This vignette walks through several use cases that demonstrate the range of
+and how to use plotting functions in the `crisprViz` package. This vignette 
+also uses the `crisprDesign` package to manipulate `GuideSet` objects in 
+conjunction with plotting in the process of gRNA design. For more information 
+about the `crisprDesign` package see [vignettes].
 
 # Installation and getting started
 
@@ -33,23 +40,25 @@ This vignette walks through several use cases that demonstrate the range of and 
 
 ### OS Requirements
 
-This package is supported for macOS, Linux and Windows machines. Packages were developed and tested on R version 4.2.
+This package is supported for macOS, Linux and Windows machines. Packages
+were developed and tested on R version 4.2.
 
-## Installation
+## Installation from Bioconductor
 
-`crisprViz` and its dependencies can be installed by typing the following commands inside of an R session:
+`crisprViz` can be installed from Bioconductor using the following
+commands in a fresh R session:
 
-```r
-install.packages("devtools")
-devtools::install_github("Jfortin1/crisprBase")
-devtools::install_github("Jfortin1/crisprDesign")
-devtools::install_github("Jfortin1/crisprViz")
+```{r, eval=FALSE}
+install.packages("BiocManager")
+BiocManager::install("crisprViz")
 ```
 
 
 # Use cases
 
-All examples in this vignette will use human genome assembly `hg38` from the `BSgenome.Hsapiens.UCSC.hg38` package and gene model coordinates from Ensembl release 104. We begin by loading the necessary packages.
+All examples in this vignette will use human genome assembly `hg38` from 
+the `BSgenome.Hsapiens.UCSC.hg38` package and gene model coordinates from
+Ensembl release 104. We begin by loading the necessary packages.
 
 ```{r, message=FALSE, warning=FALSE}
 library(BSgenome.Hsapiens.UCSC.hg38)
@@ -60,9 +69,14 @@ library(crisprViz)
 
 ## Visualizing the best gRNAs for a given gene
 
-Suppose we want to design the four best gRNAs using the SpCas9 CRISPR nuclease to knockout the human KRAS gene. To have the greatest impact on gene function we want to prioritize gRNAs that have greater isoform coverage, and target closer to the 5' end of the CDS.
+Suppose we want to design the four best gRNAs using the SpCas9 CRISPR 
+nuclease to knockout the human KRAS gene. To have the greatest impact 
+on gene function we want to prioritize gRNAs that have greater isoform
+coverage, and target closer to the 5' end of the CDS.
 
-Let's load a precomputed `GuideSet` object containing all possible gRNAs targeting the the CDS of KRAS, and a `GRangesList` object describing the gene model for KRAS.
+Let's load a precomputed `GuideSet` object containing all possible gRNAs
+targeting the the CDS of KRAS, and a `GRangesList` object describing the 
+gene model for KRAS.
 
 ``` {r}
 data("krasGuideSet", package="crisprViz")
@@ -82,13 +96,23 @@ plotGuideSet(krasGuideSet[1:4],
 
 There are a few things to note here.
 
- * The ideogram track and genome axis track are at the top of our plot and give us coordinate information.
- * Our `targetGene` KRAS is plotted next, using coordinates from the provided gene model `krasGeneModel`, followed by our spacer subset. The name of each track is given on the left.
- * The strand information for each track is included in the label: `<-` for reverse strand and `->` for forward strand.
- * While we can identify which exon each spacer targets (which may be sufficient), the plot window is too large to provide further information.
+ * The ideogram track and genome axis track are at the top of our plot and 
+ give us coordinate information.
+ * Our `targetGene` KRAS is plotted next, using coordinates from
+ the provided gene model `krasGeneModel`, followed by our spacer subset. 
+ The name of each track is given on the left.
+ * The strand information for each track is included in 
+ the label: `<-` for reverse strand and `->` for forward strand.
+ * While we can identify which exon each spacer targets (which may 
+ be sufficient), the plot window is too large to provide further information.
  * The plot only shows the 3' end of KRAS, rather than the entire gene.
  
-This last point is important: the default plot window is set by the spacers' ranges in the input `GuideSet` object. We can manually adjust this window by using the `from`, `to`, `extend.left`, and `extend.right` arguments. Here is the same plot adjusted to show the whole KRAS gene, which also reveals an additional isoform that is not targeted by any spacer in this example subset.
+This last point is important: the default plot window is set by the 
+spacers' ranges in the input `GuideSet` object. We can manually adjust
+this window by using the `from`, `to`, `extend.left`, and `extend.right` 
+arguments. Here is the same plot adjusted to show the whole KRAS gene, 
+which also reveals an additional isoform that is not targeted by any 
+spacer in this example subset.
  
 ```{r}
 from <- min(start(krasGeneModel$transcripts))
@@ -102,7 +126,11 @@ plotGuideSet(krasGuideSet[1:4],
              extend.right=1000)
 ```
  
-As calculated above, there are a total of `r length(krasGuideSet)` candidate gRNAs targeting the CDS of KRAS. Including all of them could crowd the plot space, making it difficult to interpret. To alleviate this we can hide the gRNA labels by setting the `showGuideLabels` argument to `FALSE`.
+As calculated above, there are a total of `r length(krasGuideSet)`
+candidate gRNAs targeting the CDS of KRAS. Including all of them could 
+crowd the plot space, making it difficult to interpret. To alleviate 
+this we can hide the gRNA labels by setting the `showGuideLabels` 
+argument to `FALSE`.
 
 ``` {r fig.height=10}
 plotGuideSet(krasGuideSet,
@@ -115,9 +143,16 @@ plotGuideSet(krasGuideSet,
              extend.right=1000)
 ```
 
-At the gene level, the plot window is too large to discern details for each spacer target. However, we can see five distinct clusters of spacer target locations that cover the CDS of KRAS. The spacers in the 5'-most cluster (on the reverse strand) target the only coding region of the gene that is expressed by all isoforms, making it an ideal target for our scenario.
+At the gene level, the plot window is too large to discern details for
+each spacer target. However, we can see five distinct clusters of 
+spacer target locations that cover the CDS of KRAS. The spacers in
+the 5'-most cluster (on the reverse strand) target the only coding
+region of the gene that is expressed by all isoforms, making it an 
+ideal target for our scenario.
 
-We can see which gRNAs target this region by returning `showGuideLabels` to its default value of `TRUE`, and by adjusting the plot window to focus on our exon of interest.
+We can see which gRNAs target this region by returning `showGuideLabels` to
+its default value of `TRUE`, and by adjusting the plot window to focus on
+our exon of interest.
 
 ```{r}
 # new window range around target exon
@@ -137,9 +172,17 @@ plotGuideSet(krasGuideSet,
              extend.right=20)
 ```
 
-At this resolution we can get a much better idea of spacer location and orientation. In particular, the PAM sequence is visible as a narrow box on the 3' side of our protospacer sequences. We can also distinctly see which spacer targets overlap each other--it may be best to avoid pairing such spacers in some applications lest they sterically interfere with each other.
+At this resolution we can get a much better idea of spacer location and 
+orientation. In particular, the PAM sequence is visible as a narrow box 
+on the 3' side of our protospacer sequences. We can also distinctly see 
+which spacer targets overlap each other--it may be best to avoid pairing
+such spacers in some applications lest they sterically interfere
+with each other.
 
-If we have many gRNA targets in a smaller window and are not concerned with overlaps, we can configure the plot to only show the `pam_site`, rather than the entire protospacer and PAM sequence, by setting `pamSiteOnly` to `TRUE`.
+If we have many gRNA targets in a smaller window and are not concerned
+with overlaps, we can configure the plot to only show the `pam_site`, 
+rather than the entire protospacer and PAM sequence, by setting `pamSiteOnly`
+to `TRUE`.
 
 ```{r}
 plotGuideSet(krasGuideSet,
@@ -152,7 +195,11 @@ plotGuideSet(krasGuideSet,
              pamSiteOnly=TRUE)
 ```
 
-Let's filter our `GuideSet` by the spacer names in the plot then pass an on-target score column in our `GuideSet` to `onTargetScores` to color the spacers according to that score, with darker blue colors indicating higher scores. Note that for this plot we need not provide values for `from` and `to`, as the plot window adjusts to our filtered `GuideSet`.
+Let's filter our `GuideSet` by the spacer names in the plot then pass an
+on-target score column in our `GuideSet` to `onTargetScores` to color the
+spacers according to that score, with darker blue colors indicating higher
+scores. Note that for this plot we need not provide values for `from` and
+`to`, as the plot window adjusts to our filtered `GuideSet`.
 
 ```{r, message=FALSE, warning=FALSE}
 selectedGuides <- c("spacer_80", "spacer_84", "spacer_88", "spacer_92",
@@ -240,7 +287,10 @@ elements in this region:
 data("repeats", package="crisprViz")
 ```
 
-Let's begin by plotting our `GuideSet`, and adding a track of repeat elements using the `annotations` argument. Our `guideSet` also contains SNP annotation, which we would also prefer our gRNAs to not overlap. To include a SNP annotation track, we will set `includeSNPTrack=TRUE` (default).
+Let's begin by plotting our `GuideSet`, and adding a track of repeat 
+elements using the `annotations` argument. Our `guideSet` also contains 
+SNP annotation, which we would also prefer our gRNAs to not overlap.
+To include a SNP annotation track, we will set `includeSNPTrack=TRUE` (default).
 
 ```{r}
 from <- min(start(mmp7GuideSet))
@@ -258,7 +308,10 @@ plotGuideSet(mmp7GuideSet,
              includeSNPTrack=TRUE)
 ```
 
-Some of our candidate gRNAs target repeat elements and likely target a large number of loci in the genome, potentially causing unintended effects, or overlap with SNPs, which can reduce its activity. Let's remove these gRNAs and regenerate the plot.
+Some of our candidate gRNAs target repeat elements and likely target a 
+large number of loci in the genome, potentially causing unintended 
+effects, or overlap with SNPs, which can reduce its activity. Let's
+remove these gRNAs and regenerate the plot.
 
 ```{r}
 filteredGuideSet <- crisprDesign::removeRepeats(mmp7GuideSet,
@@ -278,7 +331,10 @@ plotGuideSet(filteredGuideSet,
              includeSNPTrack=TRUE)
 ```
 
-Note how removing gRNAs that overlap SNPs from our `GuideSet` also removed the SNP track. To prevent plotting an empty track, `plotGuideSet` will only include a SNPs track if at least one gRNA includes SNP annotation (i.e. overlaps a SNP).
+Note how removing gRNAs that overlap SNPs from our `GuideSet` also
+removed the SNP track. To prevent plotting an empty track, `plotGuideSet` 
+will only include a SNPs track if at least one gRNA includes SNP 
+annotation (i.e. overlaps a SNP).
 
 Conversely, there are specific genomic regions that would be beneficial to 
 target, such as CAGE peaks and DNase I Hypersensitivity tracks. We show in 

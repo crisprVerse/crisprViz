@@ -100,17 +100,13 @@ plotMultipleGuideSets <- function(x,
         unique(GenomeInfoDb::genome(x))
     })
     genome <- unique(unlist(genome))
-    ideogramTrack <- .getIdeogramTrack(
-        includeIdeogram=includeIdeogram,
-        chr=chr,
-        genome=genome,
-        bands=bands
-    )
+    ideogramTrack <- .getIdeogramTrack(includeIdeogram=includeIdeogram,
+                                       chr=chr,
+                                       genome=genome,
+                                       bands=bands)
     genomeAxisTrack <- .getGenomeAxisTrack()
-    guideTrack <- .getGuideTrackList(
-        guideSets=guideSets,
-        onTargetScores=onTargetScores
-    )
+    guideTrack <- .getGuideTrackList(guideSets=guideSets,
+                                     onTargetScores=onTargetScores)
     
     ## set plot range
     plotWindowMin <- lapply(guideTrack, min)
@@ -133,18 +129,14 @@ plotMultipleGuideSets <- function(x,
                                from=from - extend.left,
                                to=to + extend.right)
     
-    annotationTrack <- .getAnnotationTrack(
-        annotations=annotations,
-        chr=chr,
-        from=from,
-        to=to
-    )
+    annotationTrack <- .getAnnotationTrack(annotations=annotations,
+                                           chr=chr,
+                                           from=from,
+                                           to=to)
     
     if (includeSNPTrack){
-        snpTrack <- .getSnpTrackFromList(
-            guideSets=guideSets,
-            chr=chr
-        )
+        snpTrack <- .getSnpTrackFromList(guideSets=guideSets,
+                                         chr=chr)
     } else {
         snpTrack <- list()
     }
@@ -155,41 +147,40 @@ plotMultipleGuideSets <- function(x,
                 length(gcWindow) == 1 &&
                 gcWindow == round(gcWindow)
         })
-        gcTrack <- .getGcTrack(
-            bsgenome=bsgenome,
-            chr=chr,
-            from=from - extend.left,
-            to=to + extend.right,
-            gcWindow=gcWindow
-        )
+        gcTrack <- .getGcTrack(bsgenome=bsgenome,
+                               chr=chr,
+                               from=from - extend.left,
+                               to=to + extend.right,
+                               gcWindow=gcWindow)
     } else {
         gcTrack <- NULL
     }
     
-    tracks <- c(list(ideogramTrack, genomeAxisTrack), geneTrack, annotationTrack, snpTrack, gcTrack, guideTrack)
+    tracks <- c(list(ideogramTrack, genomeAxisTrack),
+                geneTrack,
+                annotationTrack,
+                snpTrack,
+                gcTrack,
+                guideTrack)
     tracks <- tracks[vapply(tracks, function(x){
         !is.null(x)
     }, FUN.VALUE=logical(1))]
     if (!is.null(bsgenome)){
-        tracks <- .addSequenceTrack(
-            tracks=tracks,
-            chr=chr,
-            bsgenome=bsgenome
-        )
+        tracks <- .addSequenceTrack(tracks=tracks,
+                                    chr=chr,
+                                    bsgenome=bsgenome)
     }
     
-    Gviz::plotTracks(
-        tracks,
-        chromosome=chr,
-        from=from,
-        to=to,
-        just.group="above",
-        groupAnnotation="group",
-        extend.left=extend.left,
-        extend.right=extend.right,
-        background.title="darkblue",
-        background.panel="#F5F9FC"
-    )
+    Gviz::plotTracks(tracks,
+                     chromosome=chr,
+                     from=from,
+                     to=to,
+                     just.group="above",
+                     groupAnnotation="group",
+                     extend.left=extend.left,
+                     extend.right=extend.right,
+                     background.title="darkblue",
+                     background.panel="#F5F9FC")
 }
 
 
@@ -198,7 +189,7 @@ plotMultipleGuideSets <- function(x,
 
 
 
-## tracks =====================================================================
+## tracks ==================================================================
 
 
 
@@ -220,20 +211,17 @@ plotMultipleGuideSets <- function(x,
     }
     snps <- snps[!duplicated(snps$rs), , drop=FALSE]
     
-    snpRanges <- GenomicRanges::GRanges(
-        seqnames=chr,
-        ranges=IRanges::IRanges(start=snps$rs_site, width=snps$length)
-    )
+    snpRanges <- GenomicRanges::GRanges(seqnames=chr,
+                                        ranges=IRanges(start=snps$rs_site,
+                                                       width=snps$length))
     names(snpRanges) <- snps$rs
     
-    snpTrack <- Gviz::AnnotationTrack(
-        snpRanges,
-        chromosome=chr,
-        shape="box",
-        fill="#CDCDCD",
-        group=names(snpRanges),
-        name="SNP"
-    )
+    snpTrack <- Gviz::AnnotationTrack(snpRanges,
+                                      chromosome=chr,
+                                      shape="box",
+                                      fill="#CDCDCD",
+                                      group=names(snpRanges),
+                                      name="SNP")
     return(snpTrack)
 }
 
@@ -253,18 +241,14 @@ plotMultipleGuideSets <- function(x,
         title <- names(guideSets)[x]
         onTargetScore <- onTargetScores[[x]]
         
-        colors <- .getScoreColors(
-            guideSet=guideRanges,
-            onTargetScore=onTargetScore
-        )
+        colors <- .getScoreColors(guideSet=guideRanges,
+                                  onTargetScore=onTargetScore)
         
-        track <- Gviz::GeneRegionTrack(
-            range=guideRanges,
-            name=title,
-            stacking="dense",
-            fontcolor.group="black",
-            col.line="black"
-        )
+        track <- Gviz::GeneRegionTrack(range=guideRanges,
+                                       name=title,
+                                       stacking="dense",
+                                       fontcolor.group="black",
+                                       col.line="black")
         Gviz::group(track) <- names(guideRanges)
         Gviz::displayPars(track)[["fill"]] <- colors[names(guideRanges)]
         track

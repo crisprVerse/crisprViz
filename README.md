@@ -6,7 +6,8 @@ crisprViz: visualization of CRISPR guide RNAs (gRNAs)
     started](#installation-and-getting-started)
     -   [Software requirements](#software-requirements)
         -   [OS Requirements](#os-requirements)
-    -   [Installation](#installation)
+    -   [Installation from
+        Bioconductor](#installation-from-bioconductor)
 -   [Use cases](#use-cases)
     -   [Visualizing the best gRNAs for a given
         gene](#visualizing-the-best-grnas-for-a-given-gene)
@@ -47,16 +48,14 @@ package see \[vignettes\].
 This package is supported for macOS, Linux and Windows machines.
 Packages were developed and tested on R version 4.2.
 
-## Installation
+## Installation from Bioconductor
 
-`crisprViz` and its dependencies can be installed by typing the
-following commands inside of an R session:
+`crisprViz` can be installed from Bioconductor using the following
+commands in a fresh R session:
 
 ``` r
-install.packages("devtools")
-devtools::install_github("Jfortin1/crisprBase")
-devtools::install_github("Jfortin1/crisprDesign")
-devtools::install_github("Jfortin1/crisprViz")
+install.packages("BiocManager")
+BiocManager::install("crisprViz")
 ```
 
 # Use cases
@@ -101,7 +100,7 @@ plotGuideSet(krasGuideSet[1:4],
              targetGene="KRAS")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 There are a few things to note here.
 
@@ -136,7 +135,7 @@ plotGuideSet(krasGuideSet[1:4],
              extend.right=1000)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 As calculated above, there are a total of 52 candidate gRNAs targeting
 the CDS of KRAS. Including all of them could crowd the plot space,
@@ -154,7 +153,7 @@ plotGuideSet(krasGuideSet,
              extend.right=1000)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 At the gene level, the plot window is too large to discern details for
 each spacer target. However, we can see five distinct clusters of spacer
@@ -185,7 +184,7 @@ plotGuideSet(krasGuideSet,
              extend.right=20)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 At this resolution we can get a much better idea of spacer location and
 orientation. In particular, the PAM sequence is visible as a narrow box
@@ -210,7 +209,7 @@ plotGuideSet(krasGuideSet,
              pamSiteOnly=TRUE)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 Let’s filter our `GuideSet` by the spacer names in the plot then pass an
 on-target score column in our `GuideSet` to `onTargetScores` to color
@@ -229,7 +228,7 @@ plotGuideSet(candidateGuides,
              onTargetScore="score_deephf")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 <!-- ![legend caption](file path) -->
 
@@ -266,7 +265,7 @@ plotGuideSet(gpr21GuideSet,
              margin=0.3)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 The genomic sequence is given at the bottom of the plot as color-coded
 boxes. The color scheme for describing the nucleotides is given in the
@@ -289,7 +288,7 @@ plotGuideSet(gpr21GuideSet,
              margin=0.3)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ## CRISPRa and adding genomic annotations
 
@@ -331,7 +330,7 @@ plotGuideSet(mmp7GuideSet,
              includeSNPTrack=TRUE)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 Some of our candidate gRNAs target repeat elements and likely target a
 large number of loci in the genome, potentially causing unintended
@@ -356,7 +355,7 @@ plotGuideSet(filteredGuideSet,
              includeSNPTrack=TRUE)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 Note how removing gRNAs that overlap SNPs from our `GuideSet` also
 removed the SNP track. To prevent plotting an empty track,
@@ -390,7 +389,7 @@ plotGuideSet(filteredGuideSet,
              extend.right=100)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 Let’s filter our `GuideSet` for guides overlapping the plotted DNase
 site then regenerate the plot.
@@ -408,7 +407,7 @@ plotGuideSet(finalGuideSet,
              margin=0.4)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ## Comparing multiple GuideSets targeting the same region
 
@@ -447,7 +446,7 @@ plotMultipleGuideSets(list(SpCas9=cas9GuideSet, AsCas12a=cas12aGuideSet),
                       gcWindow=10)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 # Setting plot size
 
@@ -486,13 +485,13 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] crisprViz_0.99.14                 crisprDesign_0.99.109            
-    ##  [3] crisprBase_1.1.2                  BSgenome.Hsapiens.UCSC.hg38_1.4.4
-    ##  [5] BSgenome_1.63.5                   rtracklayer_1.55.4               
-    ##  [7] Biostrings_2.63.2                 XVector_0.35.0                   
-    ##  [9] GenomicRanges_1.47.6              GenomeInfoDb_1.31.6              
-    ## [11] IRanges_2.29.1                    S4Vectors_0.33.11                
-    ## [13] BiocGenerics_0.41.2              
+    ##  [1] crisprViz_0.99.16                 crisprDesign_0.99.127            
+    ##  [3] crisprBase_1.1.5                  BSgenome.Hsapiens.UCSC.hg38_1.4.4
+    ##  [5] BSgenome_1.64.0                   rtracklayer_1.55.4               
+    ##  [7] Biostrings_2.64.0                 XVector_0.35.0                   
+    ##  [9] GenomicRanges_1.48.0              GenomeInfoDb_1.32.2              
+    ## [11] IRanges_2.30.0                    S4Vectors_0.33.11                
+    ## [13] BiocGenerics_0.42.0              
     ## 
     ## loaded via a namespace (and not attached):
     ##   [1] backports_1.4.1               Hmisc_4.7-0                  
@@ -524,7 +523,7 @@ sessionInfo()
     ##  [53] XML_3.99-0.9                  Gviz_1.39.5                  
     ##  [55] nnet_7.3-17                   dbplyr_2.1.1                 
     ##  [57] utf8_1.2.2                    tidyselect_1.1.2             
-    ##  [59] rlang_1.0.2                   later_1.3.0                  
+    ##  [59] rlang_1.0.4                   later_1.3.0                  
     ##  [61] AnnotationDbi_1.57.1          munsell_0.5.0                
     ##  [63] BiocVersion_3.15.0            tools_4.2.0                  
     ##  [65] cachem_1.0.6                  cli_3.3.0                    
@@ -534,7 +533,7 @@ sessionInfo()
     ##  [73] yaml_2.3.5                    knitr_1.37                   
     ##  [75] bit64_4.0.5                   purrr_0.3.4                  
     ##  [77] randomForest_4.7-1            AnnotationFilter_1.19.0      
-    ##  [79] KEGGREST_1.35.0               Rbowtie_1.35.0               
+    ##  [79] KEGGREST_1.35.0               Rbowtie_1.36.0               
     ##  [81] mime_0.12                     xml2_1.3.3                   
     ##  [83] biomaRt_2.51.3                compiler_4.2.0               
     ##  [85] rstudioapi_0.13               filelock_1.0.2               
