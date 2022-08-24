@@ -41,3 +41,4 @@ vignettes/*.pdf
 
 
 .DS_Store
+vignettes/intro_paper*

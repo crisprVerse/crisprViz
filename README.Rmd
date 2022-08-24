@@ -27,7 +27,7 @@ This vignette walks through several use cases that demonstrate the range of and 
 
 ### OS Requirements
 
-This package is supported for macOS, Linux and Windows machines. Packages were developed and tested on R version 4.2.
+This package is supported for macOS, Linux and Windows machines. Packages were developed and tested on R version 4.2.1
 
 ## Installation from Bioconductor
 
