@@ -348,8 +348,7 @@ remove these gRNAs and regenerate the plot.
 ``` r
 filteredGuideSet <- crisprDesign::removeRepeats(mmp7GuideSet,
                                                 gr.repeats=repeats)
-filteredGuideSet <- crisprDesign::filterSpacers(filteredGuideSet,
-                                                criteria=list(hasSNP=FALSE))
+filteredGuideSet <- filteredGuideSet[!filteredGuideSet$hasSNP]
 plotGuideSet(filteredGuideSet,
              geneModel=mmp7GeneModel,
              targetGene="MMP7",
@@ -493,7 +492,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] crisprViz_0.99.18                 crisprDesign_0.99.132            
+    ##  [1] crisprViz_0.99.18                 crisprDesign_0.99.134            
     ##  [3] crisprBase_1.1.5                  BSgenome.Hsapiens.UCSC.hg38_1.4.4
     ##  [5] BSgenome_1.65.2                   rtracklayer_1.57.0               
     ##  [7] Biostrings_2.65.2                 XVector_0.37.0                   

@@ -1,6 +1,6 @@
 Package: crisprViz
 Title: Visualization Functions for CRISPR gRNAs
-Version: 0.99.20
+Version: 0.99.21
 Authors@R: c(
     person("Jean-Philippe", "Fortin", email = "fortin946@gmail.com", role = c("aut", "cre")),
     person("Luke", "Hoberecht", email = "lukehob3@gmail.com", role = c("aut"))
@@ -42,5 +42,5 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
 VignetteBuilder: knitr
-BugReports: https://github.com/Jfortin1/crisprViz/issues
-URL: https://github.com/Jfortin1/crisprViz
+BugReports: https://github.com/crisprVerse/crisprViz/issues
+URL: https://github.com/crisprVerse/crisprViz
