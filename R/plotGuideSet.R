@@ -140,10 +140,12 @@ plotGuideSet <- function(x,
         to <- plotWindowMax + margin * plotWindowSize
     }
     ## have geneTrack adjust to plot window
-    geneTrack <- .getGeneTrack(geneModel=geneModel,
-                               targetGene=targetGene,
-                               from=from - extend.left,
-                               to=to + extend.right)
+    geneTrack <- lapply(targetGene, function(x){
+        .getGeneTrack(geneModel=geneModel,
+                      targetGene=x,
+                      from=from - extend.left,
+                      to=to + extend.right)
+    })
     
     annotationTrack <- .getAnnotationTrack(annotations=annotations,
                                            chr=chr,
@@ -300,7 +302,7 @@ plotGuideSet <- function(x,
     
     ## for tx_id above that exceed limit, append "exon" beyond limit
     exonLeft <- lapply(txLeft, function(x){
-        strand <- unique(BiocGenerics::strand(splicings))
+        strand <- unique(BiocGenerics::strand(transcripts))
         currentRanks <- splicings$exon_rank[splicings$tx_id == x]
         if (length(currentRanks) == 0){
             exon_rank <- ifelse(strand == "+", 1, 2)
@@ -310,11 +312,11 @@ plotGuideSet <- function(x,
             exon_rank <- max(currentRanks) + 1
         }
         GenomicRanges::GRanges(
-            seqnames=unique(GenomeInfoDb::seqnames(splicings)),
+            seqnames=unique(GenomeInfoDb::seqnames(transcripts)),
             ranges=IRanges::IRanges(start=from-extendDistance, width=1),
             strand=strand,
             tx_id=x,
-            gene_id=unique(splicings$gene_id),
+            gene_id=unique(transcripts$gene_id),
             protein_id=NA,
             tx_type=NA,
             gene_symbol=NA,
@@ -331,7 +333,7 @@ plotGuideSet <- function(x,
     exonLeft <- Reduce(c, exonLeft)
     
     exonRight <- lapply(txRight, function(x){
-        strand <- unique(BiocGenerics::strand(splicings))
+        strand <- unique(BiocGenerics::strand(transcripts))
         currentRanks <- splicings$exon_rank[splicings$tx_id == x]
         if (length(currentRanks) == 0){
             exon_rank <- ifelse(strand == "+", 2, 1)
@@ -341,11 +343,11 @@ plotGuideSet <- function(x,
             exon_rank <- min(currentRanks) - 1
         }
         GenomicRanges::GRanges(
-            seqnames=unique(GenomeInfoDb::seqnames(splicings)),
+            seqnames=unique(GenomeInfoDb::seqnames(transcripts)),
             ranges=IRanges::IRanges(start=to+extendDistance, width=1),
             strand=strand,
             tx_id=x,
-            gene_id=unique(splicings$gene_id),
+            gene_id=unique(transcripts$gene_id),
             protein_id=NA,
             tx_type=NA,
             gene_symbol=NA,
