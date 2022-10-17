@@ -35,17 +35,21 @@ Date: July 24, 2022
 # Introduction
 
 The `crisprViz` package enables the graphical interpretation of
-`GuideSet` objects from the `crisprDesign` package by plotting guide RNA
-(gRNA) cutting locations against their target gene or other genomic
-region. These genomic plots are constructed using the `Gviz` package
-from Bioconductor.
+`GuideSet` objects from the
+[crisprDesign](https://github.com/crisprVerse/crisprDesign) package by
+plotting guide RNA (gRNA) cutting locations against their target gene or
+other genomic region.
 
 This vignette walks through several use cases that demonstrate the range
 of and how to use plotting functions in the `crisprViz` package. This
-vignette also makes heavy use of the `crisprDesign` package to
-manipulate `GuideSet` objects in conjunction with plotting in the
-process of gRNA design. For more information about the `crisprDesign`
-package see \[vignettes\].
+vignette also uses our core gRNA design package
+[crisprDesign](https://github.com/crisprVerse/crisprDesign)to manipulate
+`GuideSet` objects in conjunction with plotting in the process of gRNA
+design.
+
+Visit our [crisprVerse tutorial
+page](https://github.com/crisprVerse/Tutorials) to learn more about how
+to design gRNAs for different applications.
 
 # Installation and getting started
 
@@ -492,20 +496,20 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] crisprViz_0.99.18                 crisprDesign_0.99.134            
-    ##  [3] crisprBase_1.1.5                  BSgenome.Hsapiens.UCSC.hg38_1.4.4
+    ##  [1] crisprViz_0.99.22                 crisprDesign_0.99.176            
+    ##  [3] crisprBase_1.1.8                  BSgenome.Hsapiens.UCSC.hg38_1.4.4
     ##  [5] BSgenome_1.65.2                   rtracklayer_1.57.0               
-    ##  [7] Biostrings_2.65.2                 XVector_0.37.0                   
-    ##  [9] GenomicRanges_1.49.1              GenomeInfoDb_1.33.5              
-    ## [11] IRanges_2.31.2                    S4Vectors_0.35.1                 
-    ## [13] BiocGenerics_0.43.1              
+    ##  [7] Biostrings_2.65.3                 XVector_0.37.1                   
+    ##  [9] GenomicRanges_1.49.1              GenomeInfoDb_1.33.7              
+    ## [11] IRanges_2.31.2                    S4Vectors_0.35.3                 
+    ## [13] BiocGenerics_0.43.4              
     ## 
     ## loaded via a namespace (and not attached):
     ##   [1] backports_1.4.1               Hmisc_4.7-1                  
-    ##   [3] AnnotationHub_3.5.0           BiocFileCache_2.5.0          
+    ##   [3] AnnotationHub_3.5.1           BiocFileCache_2.5.0          
     ##   [5] lazyeval_0.2.2                splines_4.2.1                
     ##   [7] BiocParallel_1.31.12          ggplot2_3.3.6                
-    ##   [9] digest_0.6.29                 ensembldb_2.21.3             
+    ##   [9] digest_0.6.29                 ensembldb_2.21.4             
     ##  [11] htmltools_0.5.3               fansi_1.0.3                  
     ##  [13] checkmate_2.1.0               magrittr_2.0.3               
     ##  [15] memoise_2.0.1                 cluster_2.1.4                
@@ -514,27 +518,27 @@ sessionInfo()
     ##  [21] jpeg_0.1-9                    colorspace_2.0-3             
     ##  [23] blob_1.2.3                    rappdirs_0.3.3               
     ##  [25] crisprScoreData_1.1.3         xfun_0.32                    
-    ##  [27] dplyr_1.0.9                   crayon_1.5.1                 
+    ##  [27] dplyr_1.0.10                  crayon_1.5.1                 
     ##  [29] RCurl_1.98-1.8                jsonlite_1.8.0               
     ##  [31] survival_3.4-0                VariantAnnotation_1.43.3     
-    ##  [33] glue_1.6.2                    gtable_0.3.0                 
+    ##  [33] glue_1.6.2                    gtable_0.3.1                 
     ##  [35] zlibbioc_1.43.0               DelayedArray_0.23.1          
     ##  [37] scales_1.2.1                  DBI_1.1.3                    
     ##  [39] Rcpp_1.0.9                    htmlTable_2.4.1              
     ##  [41] xtable_1.8-4                  progress_1.2.2               
-    ##  [43] reticulate_1.25               foreign_0.8-82               
+    ##  [43] reticulate_1.26               foreign_0.8-82               
     ##  [45] bit_4.0.4                     Formula_1.2-4                
     ##  [47] htmlwidgets_1.5.4             httr_1.4.4                   
-    ##  [49] dir.expiry_1.5.0              RColorBrewer_1.1-3           
+    ##  [49] dir.expiry_1.5.1              RColorBrewer_1.1-3           
     ##  [51] ellipsis_0.3.2                pkgconfig_2.0.3              
     ##  [53] XML_3.99-0.10                 Gviz_1.41.1                  
     ##  [55] nnet_7.3-17                   dbplyr_2.2.1                 
     ##  [57] deldir_1.0-6                  utf8_1.2.2                   
-    ##  [59] tidyselect_1.1.2              rlang_1.0.4                  
+    ##  [59] tidyselect_1.1.2              rlang_1.0.5                  
     ##  [61] later_1.3.0                   AnnotationDbi_1.59.1         
     ##  [63] munsell_0.5.0                 BiocVersion_3.16.0           
     ##  [65] tools_4.2.1                   cachem_1.0.6                 
-    ##  [67] cli_3.3.0                     generics_0.1.3               
+    ##  [67] cli_3.4.0                     generics_0.1.3               
     ##  [69] RSQLite_2.2.16                ExperimentHub_2.5.0          
     ##  [71] evaluate_0.16                 stringr_1.4.1                
     ##  [73] fastmap_1.1.0                 yaml_2.3.5                   
@@ -547,8 +551,8 @@ sessionInfo()
     ##  [87] filelock_1.0.2                curl_4.3.2                   
     ##  [89] png_0.1-7                     interactiveDisplayBase_1.35.0
     ##  [91] tibble_3.1.8                  stringi_1.7.8                
-    ##  [93] crisprScore_1.1.14            highr_0.9                    
-    ##  [95] basilisk.utils_1.9.1          GenomicFeatures_1.49.6       
+    ##  [93] crisprScore_1.1.15            highr_0.9                    
+    ##  [95] basilisk.utils_1.9.3          GenomicFeatures_1.49.6       
     ##  [97] lattice_0.20-45               ProtGenerics_1.29.0          
     ##  [99] Matrix_1.4-1                  vctrs_0.4.1                  
     ## [101] pillar_1.8.1                  lifecycle_1.0.1              
@@ -558,12 +562,12 @@ sessionInfo()
     ## [109] latticeExtra_0.6-30           promises_1.2.0.1             
     ## [111] gridExtra_2.3                 codetools_0.2-18             
     ## [113] dichromat_2.0-0.1             crisprBowtie_1.1.1           
-    ## [115] assertthat_0.2.1              SummarizedExperiment_1.27.1  
+    ## [115] assertthat_0.2.1              SummarizedExperiment_1.27.2  
     ## [117] rjson_0.2.21                  GenomicAlignments_1.33.1     
     ## [119] Rsamtools_2.13.4              GenomeInfoDbData_1.2.8       
     ## [121] parallel_4.2.1                hms_1.1.2                    
     ## [123] rpart_4.1.16                  grid_4.2.1                   
-    ## [125] basilisk_1.9.2                rmarkdown_2.15.2             
+    ## [125] basilisk_1.9.6                rmarkdown_2.16               
     ## [127] MatrixGenerics_1.9.1          biovizBase_1.45.0            
     ## [129] Biobase_2.57.1                shiny_1.7.2                  
     ## [131] base64enc_0.1-3               interp_1.1-3                 

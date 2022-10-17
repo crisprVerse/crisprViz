@@ -24,15 +24,16 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE)
 # Introduction
 
 The `crisprViz` package enables the graphical interpretation of `GuideSet` 
-objects from the `crisprDesign` package by plotting guide RNA (gRNA) 
+objects from the [crisprDesign](https://github.com/crisprVerse/crisprDesign) package by plotting guide RNA (gRNA) 
 cutting locations against their target gene or other genomic region. 
-These genomic plots are constructed using the `Gviz` package from Bioconductor.
 
 This vignette walks through several use cases that demonstrate the range of
 and how to use plotting functions in the `crisprViz` package. This vignette 
-also uses the `crisprDesign` package to manipulate `GuideSet` objects in 
-conjunction with plotting in the process of gRNA design. For more information 
-about the `crisprDesign` package see [vignettes].
+also uses our core gRNA design package [crisprDesign](https://github.com/crisprVerse/crisprDesign)to manipulate `GuideSet` objects in 
+conjunction with plotting in the process of gRNA design. 
+
+Visit our [crisprVerse tutorial page](https://github.com/crisprVerse/Tutorials) to learn more about how to design gRNAs for different applications. 
+
 
 # Installation and getting started
 
