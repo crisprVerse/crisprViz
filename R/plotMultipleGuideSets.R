@@ -29,8 +29,9 @@
 #'     \code{NULL}.
 #' @param includeIdeogram Logical; whether to include an
 #'     \link[Gviz]{IdeogramTrack} in the plot.
-#' @param bands An optional \code{data.frame} of cytoband information for the 
-#'     target genome; see \link[Gviz]{IdeogramTrack}.
+#' @param bands A \code{data.frame} of cytoband information for the 
+#'     target genome required for ideogram plotting; see
+#'     \link[Gviz]{IdeogramTrack}.
 #' @param bsgenome A \linkS4class{BSgenome} object; used to generate
 #'     \link[Gviz]{SequenceTrack} and GC content \link[Gviz]{DataTrack}.
 #' @param onTargetScores Optional list of column names for each element in
@@ -96,13 +97,13 @@ plotMultipleGuideSets <- function(x,
     })
     
     ## set tracks
-    genome <- lapply(guideSets, function(x){
-        unique(GenomeInfoDb::genome(x))
-    })
-    genome <- unique(unlist(genome))
+    # genome <- lapply(guideSets, function(x){
+    #     unique(GenomeInfoDb::genome(x))
+    # })
+    # genome <- unique(unlist(genome))
     ideogramTrack <- .getIdeogramTrack(includeIdeogram=includeIdeogram,
                                        chr=chr,
-                                       genome=genome,
+                                       # genome=genome,
                                        bands=bands)
     genomeAxisTrack <- .getGenomeAxisTrack()
     guideTrack <- .getGuideTrackList(guideSets=guideSets,

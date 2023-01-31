@@ -28,8 +28,9 @@
 #'     \code{NULL}.
 #' @param includeIdeogram Logical; whether to include an
 #'     \link[Gviz]{IdeogramTrack} in the plot.
-#' @param bands An optional \code{data.frame} of cytoband information for the 
-#'     target genome; see \link[Gviz]{IdeogramTrack}.
+#' @param bands A \code{data.frame} of cytoband information for the 
+#'     target genome required for ideogram plotting; see
+#'     \link[Gviz]{IdeogramTrack}.
 #' @param guideStacking  Character string specifying how to stack guides.
 #'     Options are \code{squish}, \code{dense}, \code{hide} (see
 #'     \link[Gviz]{GeneRegionTrack}), or \code{NA} to have each guide occupy a
@@ -113,10 +114,10 @@ plotGuideSet <- function(x,
     })
     
     ## set tracks
-    genome <- unique(GenomeInfoDb::genome(guideSet))
+    # genome <- unique(GenomeInfoDb::genome(guideSet))
     ideogramTrack <- .getIdeogramTrack(includeIdeogram=includeIdeogram,
                                        chr=chr,
-                                       genome=genome,
+                                       # genome=genome,
                                        bands=bands)
     genomeAxisTrack <- .getGenomeAxisTrack()
     guideTrack <- .getGuideTrack(guideSet=guideSet,
@@ -124,7 +125,6 @@ plotGuideSet <- function(x,
                                  pamSiteOnly=pamSiteOnly,
                                  showGuideLabels=showGuideLabels,
                                  onTargetScore=onTargetScore)
-    
     ## set plot range
     plotWindowMin <- lapply(guideTrack, min)
     plotWindowMin <- min(unlist(plotWindowMin))
@@ -174,7 +174,6 @@ plotGuideSet <- function(x,
     } else {
         gcTrack <- NULL
     }
-        
     
     tracks <- c(list(ideogramTrack, genomeAxisTrack),
                 geneTrack,
@@ -190,6 +189,7 @@ plotGuideSet <- function(x,
                                     chr=chr,
                                     bsgenome=bsgenome)
     }
+    
     Gviz::plotTracks(tracks,
                      chromosome=chr,
                      from=from,
@@ -221,14 +221,14 @@ plotGuideSet <- function(x,
 #' @importFrom Gviz IdeogramTrack
 .getIdeogramTrack <- function(includeIdeogram,
                               chr,
-                              genome,
+                              # genome,
                               bands
 ){
-    if (!includeIdeogram || (is.null(genome) && is.null(bands))){
+    if (!includeIdeogram || is.null(bands)){
         return(NULL)
     } else {
         Gviz::IdeogramTrack(chromosome=chr,
-                            genome=genome,
+                            # genome=genome,
                             bands=bands,
                             fontcolor="black",
                             cex=1)

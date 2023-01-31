@@ -53,8 +53,9 @@ respective side of the plot if either \code{from} or \code{to} are
 \item{includeIdeogram}{Logical; whether to include an
 \link[Gviz]{IdeogramTrack} in the plot.}
 
-\item{bands}{An optional \code{data.frame} of cytoband information for the
-target genome; see \link[Gviz]{IdeogramTrack}.}
+\item{bands}{A \code{data.frame} of cytoband information for the
+target genome required for ideogram plotting; see
+\link[Gviz]{IdeogramTrack}.}
 
 \item{bsgenome}{A \linkS4class{BSgenome} object; used to generate
 \link[Gviz]{SequenceTrack} and GC content \link[Gviz]{DataTrack}.}

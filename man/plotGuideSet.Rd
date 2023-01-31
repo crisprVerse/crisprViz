@@ -55,8 +55,9 @@ respective side of the plot if either \code{from} or \code{to} are
 \item{includeIdeogram}{Logical; whether to include an
 \link[Gviz]{IdeogramTrack} in the plot.}
 
-\item{bands}{An optional \code{data.frame} of cytoband information for the
-target genome; see \link[Gviz]{IdeogramTrack}.}
+\item{bands}{A \code{data.frame} of cytoband information for the
+target genome required for ideogram plotting; see
+\link[Gviz]{IdeogramTrack}.}
 
 \item{guideStacking}{Character string specifying how to stack guides.
 Options are \code{squish}, \code{dense}, \code{hide} (see
