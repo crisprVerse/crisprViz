@@ -278,10 +278,23 @@ plotGuideSet <- function(x,
                                                queryColumn="gene_symbol",
                                                queryValue=targetGene)
     if (length(transcripts) == 0){
+        ## try as gene_id
+        transcripts <- crisprDesign::queryTxObject(txObject=geneModel,
+                                                   featureType="transcripts",
+                                                   queryColumn="gene_id",
+                                                   queryValue=targetGene)
+    }
+    ## grab gene_id from transcripts, use instead of gene_symbol
+    gene_id <- unique(transcripts$gene_id)
+    if (length(gene_id) == 0 || is.na(gene_id)){
         warning("targetGene not found in geneModel, ignoring.",
                 immediate.=TRUE)
         return()
     }
+    transcripts <- crisprDesign::queryTxObject(txObject=geneModel,
+                                               featureType="transcripts",
+                                               queryColumn="gene_id",
+                                               queryValue=gene_id)
     ## get tx_id whose start/end exceed limits (for each limit)
     txLeft <- transcripts$tx_id[BiocGenerics::start(transcripts) < from &
                                     BiocGenerics::end(transcripts) > from]
@@ -293,8 +306,8 @@ plotGuideSet <- function(x,
                                      end=to)
     splicings <- crisprDesign::queryTxObject(txObject=geneModel,
                                              featureType="exons",
-                                             queryColumn="gene_symbol",
-                                             queryValue=targetGene)
+                                             queryColumn="gene_id",
+                                             queryValue=gene_id)
     splicings <- IRanges::restrict(splicings,
                                    start=from,
                                    end=to)
