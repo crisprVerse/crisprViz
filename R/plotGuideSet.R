@@ -594,6 +594,10 @@ plotGuideSet <- function(x,
     colors <- .getScoreColors(guideSet=guideSet,
                               onTargetScore=onTargetScore)
     
+    ## handle possible sequences from arbitrary chroms
+    chromIdentifierOption <- options()$ucscChromosomeNames
+    options(ucscChromosomeNames=FALSE)
+    
     guideTracks <- lapply(guideRanges, function(x){
         if (methods::is(x, "TxDb")){
             names <- GenomicFeatures::transcripts(x)$tx_name
@@ -624,6 +628,10 @@ plotGuideSet <- function(x,
         }
         track
     })
+    
+    ## reset option
+    options(ucscChromosomeNames=chromIdentifierOption)
+    
     return(guideTracks)
 }
 
@@ -677,7 +685,6 @@ plotGuideSet <- function(x,
     chrominfo <- GenomeInfoDb::seqinfo(guideSet)
     chrominfo <- data.frame(chrom=GenomeInfoDb::seqnames(chrominfo),
                             length=GenomeInfoDb::seqlengths(chrominfo))
-    
     if (is.na(guideStacking)){
         txdb <- lapply(seq_len(nrow(tx)), function(x){
             suppressWarnings(
