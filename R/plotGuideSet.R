@@ -433,13 +433,13 @@ plotGuideSet <- function(x,
                                      transcriptAnnotation="transcript",
                                      fontcolor.group="black",
                                      col.line="black")
+    if (length(txTrack) > 0){
+        label <- paste0(targetGene, " (", Gviz::transcript(txTrack), ")")
+        txTrack <- .addStrandToLabel(track=txTrack,
+                                     label=label,
+                                     strand=Gviz::strand(txTrack))
+    }
     
-    
-    ## separate function to add direction to labels
-    label <- paste0(targetGene, " (", Gviz::transcript(txTrack), ")")
-    txTrack <- .addStrandToLabel(track=txTrack,
-                                 label=label,
-                                 strand=Gviz::strand(txTrack))
     return(txTrack)
 }
 
