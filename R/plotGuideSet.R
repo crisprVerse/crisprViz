@@ -286,7 +286,7 @@ plotGuideSet <- function(x,
     }
     ## grab gene_id from transcripts, use instead of gene_symbol
     gene_id <- unique(transcripts$gene_id)
-    if (length(gene_id) == 0 || is.na(gene_id)){
+    if (length(gene_id) == 0 || (length(gene_id) == 1 && is.na(gene_id))){
         warning("targetGene not found in geneModel, ignoring.",
                 immediate.=TRUE)
         return()
