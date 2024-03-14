@@ -1,6 +1,6 @@
 Package: crisprViz
 Title: Visualization Functions for CRISPR gRNAs
-Version: 1.5.0
+Version: 1.5.1
 Authors@R: c(
     person("Jean-Philippe", "Fortin", email = "fortin946@gmail.com", role = c("aut", "cre")),
     person("Luke", "Hoberecht", email = "lukehob3@gmail.com", role = c("aut"))
@@ -32,7 +32,8 @@ Suggests:
     rmarkdown,
     rtracklayer,
     testthat,
-    utils
+    utils,
+    txdbmaker
 biocViews:
     CRISPR,
     FunctionalGenomics,
