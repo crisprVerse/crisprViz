@@ -261,7 +261,7 @@ plotGuideSet <- function(x,
 #' @importFrom GenomeInfoDb seqnames seqinfo seqlengths
 #' @importClassesFrom IRanges IRanges
 #' @importFrom IRanges IRanges
-#' @importFrom GenomicFeatures makeTxDb
+#' @importFrom txdbmaker makeTxDb
 #' @importFrom Gviz GeneRegionTrack transcript strand
 .getGeneTrack <- function(geneModel,
                           targetGene,
@@ -421,9 +421,9 @@ plotGuideSet <- function(x,
                             cds_end=sps$cds_end)
     
     txdb <- suppressWarnings(
-        GenomicFeatures::makeTxDb(transcripts=transcripts,
-                                  splicings=splicings,
-                                  chrominfo=chrominfo)
+        txdbmaker::makeTxDb(transcripts=transcripts,
+                            splicings=splicings,
+                            chrominfo=chrominfo)
     )
     
     txTrack <- Gviz::GeneRegionTrack(range=txdb,
@@ -645,7 +645,7 @@ plotGuideSet <- function(x,
 #' @importFrom S4Vectors mcols<-
 #' @importFrom BiocGenerics start end strand
 #' @importFrom GenomeInfoDb seqnames seqinfo seqlengths
-#' @importFrom GenomicFeatures makeTxDb
+#' @importFrom txdbmaker makeTxDb
 .extractGuideRanges <- function(guideSet,
                                 guideStacking
 ){
@@ -688,18 +688,17 @@ plotGuideSet <- function(x,
     if (is.na(guideStacking)){
         txdb <- lapply(seq_len(nrow(tx)), function(x){
             suppressWarnings(
-                GenomicFeatures::makeTxDb(
-                                          transcripts=tx[x, , drop=FALSE],
-                                          splicings=splicings[x, , drop=FALSE],
-                                          chrominfo=chrominfo)
+                txdbmaker::makeTxDb(transcripts=tx[x, , drop=FALSE],
+                                    splicings=splicings[x, , drop=FALSE],
+                                    chrominfo=chrominfo)
             )
         })
     } else {
         txdb <- list(
             suppressWarnings(
-                GenomicFeatures::makeTxDb(transcripts=tx,
-                                          splicings=splicings,
-                                          chrominfo=chrominfo)
+                txdbmaker::makeTxDb(transcripts=tx,
+                                    splicings=splicings,
+                                    chrominfo=chrominfo)
             )
         )
     }
